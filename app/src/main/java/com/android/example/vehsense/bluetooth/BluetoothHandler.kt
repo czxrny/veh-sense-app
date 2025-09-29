@@ -58,25 +58,6 @@ class BluetoothHandler(
         }
     }
 
-    private val btChangeReceiver = object : BroadcastReceiver() {
-        @Suppress("MissingPermission")
-        override fun onReceive(ctx: Context, intent: Intent) {
-            when (intent.action) {
-                BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
-                    when (state) {
-                        BluetoothAdapter.STATE_OFF -> {
-                            onBluetoothStateChange(false)
-                        }
-                        BluetoothAdapter.STATE_ON -> {
-                            onBluetoothStateChange(true)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private fun getMissingPermissions(activity: android.app.Activity): List<String> {
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -123,9 +104,6 @@ class BluetoothHandler(
 
         val findingFilter= IntentFilter(BluetoothDevice.ACTION_FOUND)
         context.registerReceiver(receiver, findingFilter)
-
-        val stateChangingFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-        context.registerReceiver(btChangeReceiver, stateChangingFilter)
 
         bluetoothAdapter?.startDiscovery()
     }
@@ -200,7 +178,6 @@ class BluetoothHandler(
 
     fun cleanup() {
         try { context.unregisterReceiver(receiver) } catch (_: Exception) {}
-        try { context.unregisterReceiver(btChangeReceiver) } catch (_: Exception) {}
         try { socket?.close() } catch (_: Exception) {}
     }
 }

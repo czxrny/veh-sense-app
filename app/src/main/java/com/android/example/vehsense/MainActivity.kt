@@ -1,9 +1,13 @@
 package com.android.example.vehsense
 
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,16 +24,35 @@ import com.android.example.vehsense.model.ObdFrame
 
 class MainActivity : ComponentActivity() {
     private lateinit var bluetoothHandler: BluetoothHandler
+    private lateinit var btReceiver: BroadcastReceiver
+
+    class BluetoothStateReceiver(
+        private val onBluetoothChange: (Boolean) -> Unit
+    ) : BroadcastReceiver() {
+        @Suppress("MissingPermission")
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                when (state) {
+                    BluetoothAdapter.STATE_ON -> onBluetoothChange(true)
+                    BluetoothAdapter.STATE_OFF -> onBluetoothChange(false)
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             val localContext = LocalContext.current
             var devices by remember { mutableStateOf(listOf<BluetoothDevice>()) }
             var obdFrame by remember { mutableStateOf(ObdFrame())}
             var bluetoothIsOn by remember { mutableStateOf(false) }
             var hasPermission by remember { mutableStateOf(false) }
+
+            val btReceiver = BluetoothStateReceiver(onBluetoothChange = {bluetoothIsOn = it})
+            val stateChangingFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+            localContext.registerReceiver(btReceiver, stateChangingFilter)
 
             bluetoothHandler = BluetoothHandler(
                 context = localContext,
@@ -126,6 +149,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        try { this.unregisterReceiver(btReceiver) } catch (_: Exception) {}
         bluetoothHandler.cleanup()
     }
 }
