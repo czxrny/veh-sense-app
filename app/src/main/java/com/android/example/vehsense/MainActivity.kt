@@ -1,5 +1,6 @@
 package com.android.example.vehsense
 
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
@@ -57,7 +58,9 @@ class MainActivity : ComponentActivity() {
             bluetoothHandler = BluetoothHandler(
                 context = localContext,
                 onMessage = { msg ->
-                    Toast.makeText(localContext, msg, Toast.LENGTH_SHORT).show()
+                    (localContext as Activity).runOnUiThread {
+                        Toast.makeText(localContext, msg, Toast.LENGTH_SHORT).show()
+                    }
                 },
                 onDevicesUpdated = { list ->
                     devices = list
