@@ -1,4 +1,4 @@
-package com.android.example.vehsense
+package com.android.example.vehsense.bluetooth
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
@@ -20,6 +20,7 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.util.*
 
+
 class BluetoothHandler(
     private val context: Context,
     private val onMessage: (String) -> Unit,
@@ -27,7 +28,6 @@ class BluetoothHandler(
     private val onRPMUpdated: (Int) -> Unit,
     private val onBluetoothStateChange: (Boolean) -> Unit
 ) {
-
     private val REQUEST_CODE_BT = 1001
     private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
@@ -142,12 +142,10 @@ class BluetoothHandler(
                 reader = BufferedReader(InputStreamReader(socket!!.inputStream))
 
                 // ELM327 basic setup
-                sendCommand("ATZ")   // reset
-                Thread.sleep(1000)
-                sendCommand("ATE0")  // echo off
-                Thread.sleep(200)
-                sendCommand("ATL0")  // linefeed off
-                Thread.sleep(200)
+                for (cfg in ObdConfig.entries) {
+                    sendCommand(cfg.command)
+                    Thread.sleep(1000)
+                }
 
                 startRPMPolling()
 
@@ -174,9 +172,9 @@ class BluetoothHandler(
     private fun startRPMPolling() {
         Thread {
             while (socket?.isConnected == true) {
-                sendCommand("010C") // request RPM
+                sendCommand(ObdCommand.RPM.code)
                 val response = readResponse()
-                val rpm = parseRPM(response)
+                val rpm = ObdCommand.RPM.parse(response)
                 onRPMUpdated(rpm)
                 Thread.sleep(1000)
             }
@@ -193,19 +191,6 @@ class BluetoothHandler(
             Log.e("ELM", "Read error", e)
         }
         return sb.toString()
-    }
-
-    private fun parseRPM(response: String): Int {
-        return try {
-            val parts = response.trim().split(" ")
-            if (parts.size >= 4) {
-                val A = parts[2].toInt(16)
-                val B = parts[3].toInt(16)
-                ((A * 256 + B) / 4)
-            } else 0
-        } catch (e: Exception) {
-            0
-        }
     }
 
     fun cleanup() {
