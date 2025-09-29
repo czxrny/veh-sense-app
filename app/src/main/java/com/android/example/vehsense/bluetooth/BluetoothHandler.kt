@@ -13,6 +13,8 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.android.example.vehsense.model.ObdFrame
+import com.android.example.vehsense.model.mapToObdFrame
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.IOException
@@ -25,7 +27,7 @@ class BluetoothHandler(
     private val context: Context,
     private val onMessage: (String) -> Unit,
     private val onDevicesUpdated: (List<BluetoothDevice>) -> Unit,
-    private val onRPMUpdated: (Int) -> Unit,
+    private val onFrameUpdate: (ObdFrame) -> Unit,
     private val onBluetoothStateChange: (Boolean) -> Unit
 ) {
     private val REQUEST_CODE_BT = 1001
@@ -146,10 +148,9 @@ class BluetoothHandler(
                     sendCommand(cfg.command)
                     Thread.sleep(1000)
                 }
-
-                startRPMPolling()
-
                 onMessage("Connected to ${device.name}")
+
+                startObdPolling()
 
             } catch (e: IOException) {
                 Log.e("BT", "Connection Error", e)
@@ -169,13 +170,17 @@ class BluetoothHandler(
         }
     }
 
-    private fun startRPMPolling() {
+    private fun startObdPolling() {
         Thread {
             while (socket?.isConnected == true) {
-                sendCommand(ObdCommand.RPM.code)
-                val response = readResponse()
-                val rpm = ObdCommand.RPM.parse(response)
-                onRPMUpdated(rpm)
+                val obdValues: MutableMap<String, Int> = mutableMapOf()
+                for (command in ObdCommand.entries) {
+                    sendCommand(command.code)
+                    val rawResponse = readResponse()
+                    val response = command.parse(rawResponse)
+                    obdValues[command.name] = response
+                }
+                onFrameUpdate(mapToObdFrame(obdValues))
                 Thread.sleep(1000)
             }
         }.start()

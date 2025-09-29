@@ -11,9 +11,9 @@ enum class ObdCommand(override val code: String) : ObdOperation {
             return try {
                 val parts = response.trim().split(" ")
                 if (parts.size >= 4) {
-                    val A = parts[2].toInt(16)
-                    val B = parts[3].toInt(16)
-                    (A * 256 + B) / 4
+                    val a = parts[2].toInt(16)
+                    val b = parts[3].toInt(16)
+                    (a * 256 + b) / 4
                 } else 0
             } catch (e: Exception) {
                 0

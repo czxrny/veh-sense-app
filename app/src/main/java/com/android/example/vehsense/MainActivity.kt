@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.bluetooth.BluetoothHandler
+import com.android.example.vehsense.model.ObdFrame
 
 class MainActivity : ComponentActivity() {
     private lateinit var bluetoothHandler: BluetoothHandler
@@ -26,7 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val localContext = LocalContext.current
             var devices by remember { mutableStateOf(listOf<BluetoothDevice>()) }
-            var rpm by remember { mutableIntStateOf(0) }
+            var obdFrame by remember { mutableStateOf(ObdFrame())}
             var bluetoothIsOn by remember { mutableStateOf(false) }
             var hasPermission by remember { mutableStateOf(false) }
 
@@ -38,8 +39,8 @@ class MainActivity : ComponentActivity() {
                 onDevicesUpdated = { list ->
                     devices = list
                 },
-                onRPMUpdated = { newRPM ->
-                    rpm = newRPM
+                onFrameUpdate = { newFrame ->
+                    obdFrame = newFrame
                 },
                 onBluetoothStateChange = { isOn ->
                     bluetoothIsOn = isOn
@@ -95,7 +96,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             Spacer(Modifier.height(16.dp))
-                            Text("RPM: $rpm", style = MaterialTheme.typography.titleLarge)
+                            Text("RPM: ${obdFrame.rpm}", style = MaterialTheme.typography.titleLarge)
 
                         } else {
                             Text("Please enable Bluetooth to proceed.")
