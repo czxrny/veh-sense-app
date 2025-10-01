@@ -1,3 +1,10 @@
+import java.util.Properties
+
+val dotenv = Properties().apply {
+    val envFile = rootProject.file(".env")
+    if (envFile.exists()) envFile.inputStream().use { load(it) }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,6 +16,11 @@ android {
     compileSdk = 36
 
     defaultConfig {
+        buildFeatures {
+            buildConfig = true
+        }
+
+        buildConfigField("String", "BACKEND_URL", "\"${dotenv["BACKEND_URL"] ?: "https://fallback.example"}\"")
         applicationId = "com.android.example.vehsense"
         minSdk = 26
         targetSdk = 36
