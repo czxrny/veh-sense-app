@@ -14,7 +14,6 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.android.example.vehsense.model.ObdFrame
-import com.android.example.vehsense.model.mapToObdFrame
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.IOException
@@ -28,7 +27,6 @@ class BluetoothHandler(
     private val onMessage: (String) -> Unit,
     private val onDevicesUpdated: (List<BluetoothDevice>) -> Unit,
     private val onFrameUpdate: (ObdFrame) -> Unit,
-    private val onBluetoothStateChange: (Boolean) -> Unit
 ) {
     private val REQUEST_CODE_BT = 1001
     private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
@@ -157,9 +155,11 @@ class BluetoothHandler(
                     val rawResponse = readResponse()
                     val response = command.parse(rawResponse)
                     obdValues[command.name] = response
+                    Thread.sleep(100)
                 }
-                onFrameUpdate(mapToObdFrame(obdValues))
-                Thread.sleep(1000)
+                Log.d("OBD", "OBD FRAME:\n" +
+                        obdValues.toString() )
+                onFrameUpdate(ObdFrame(obdValues))
             }
         }.start()
     }

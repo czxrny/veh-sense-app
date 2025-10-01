@@ -19,7 +19,32 @@ enum class ObdCommand(override val code: String) : ObdOperation {
                 0
             }
         }
-    };
+    },
+    ENGINE_LOAD("0104") {
+        override fun parse(response: String): Int {
+            return try {
+                val parts = response.trim().split(" ")
+                if (parts.size >= 3) {
+                    val a = parts[2].toInt(16)
+                    a * 100 / 255
+                } else 0
+            } catch (e: Exception) {
+                0
+            }
+        }
+    },
+    VEHICLE_SPEED("010D") {
+        override fun parse(response: String): Int {
+            return try {
+                val parts = response.trim().split(" ")
+                if (parts.size >= 3) {
+                    parts[2].toInt(16)
+                } else 0
+            } catch (e: Exception) {
+                0
+            }
+        }
+    }
 }
 
 

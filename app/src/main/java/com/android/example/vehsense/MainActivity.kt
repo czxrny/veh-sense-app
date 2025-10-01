@@ -68,9 +68,6 @@ class MainActivity : ComponentActivity() {
                 onFrameUpdate = { newFrame ->
                     obdFrame = newFrame
                 },
-                onBluetoothStateChange = { isOn ->
-                    bluetoothIsOn = isOn
-                }
             )
 
             Scaffold { padding ->
@@ -122,7 +119,9 @@ class MainActivity : ComponentActivity() {
                             }
 
                             Spacer(Modifier.height(16.dp))
-                            Text("RPM: ${obdFrame.rpm}", style = MaterialTheme.typography.titleLarge)
+                            Text("RPM: ${obdFrame.rpm}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Load: ${obdFrame.rpm}%", style = MaterialTheme.typography.bodyMedium)
+                            Text("Speed: ${obdFrame.rpm} km/h", style = MaterialTheme.typography.bodyMedium)
 
                         } else {
                             Text("Please enable Bluetooth to proceed.")
