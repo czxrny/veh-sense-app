@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.bluetooth.BluetoothHandler
 import com.android.example.vehsense.model.ObdFrame
+import com.android.example.vehsense.network.BackendCommunicator
 
 class MainActivity : ComponentActivity() {
     private lateinit var bluetoothHandler: BluetoothHandler
@@ -77,6 +78,15 @@ class MainActivity : ComponentActivity() {
                         .padding(16.dp)
                         .fillMaxSize()
                 ) {
+                    Button(
+                        onClick = {
+                            val back = BackendCommunicator()
+                            back.test()
+                        }
+                    ) {
+                        Text("Pingnij")
+                    }
+
                     if (!hasPermission) {
                         Button(
                             onClick = {
@@ -138,6 +148,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
 
             LaunchedEffect(Unit) {
                 bluetoothIsOn = bluetoothHandler.bluetoothIsEnabled()
