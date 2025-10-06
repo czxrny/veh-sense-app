@@ -130,8 +130,8 @@ class MainActivity : ComponentActivity() {
 
                             Spacer(Modifier.height(16.dp))
                             Text("RPM: ${obdFrame.rpm}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Load: ${obdFrame.rpm}%", style = MaterialTheme.typography.bodyMedium)
-                            Text("Speed: ${obdFrame.rpm} km/h", style = MaterialTheme.typography.bodyMedium)
+                            Text("Load: ${obdFrame.engineLoad}%", style = MaterialTheme.typography.bodyMedium)
+                            Text("Speed: ${obdFrame.vehicleSpeed} km/h", style = MaterialTheme.typography.bodyMedium)
 
                         } else {
                             Text("Please enable Bluetooth to proceed.")

@@ -155,7 +155,7 @@ class BluetoothHandler(
                     val rawResponse = readResponse()
                     val response = command.parse(rawResponse)
                     obdValues[command.name] = response
-                    Thread.sleep(100)
+                    Thread.sleep(200)
                 }
                 Log.d("OBD", "OBD FRAME:\n" +
                         obdValues.toString() )
