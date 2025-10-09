@@ -20,8 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.bluetooth.BluetoothHandler
-import com.android.example.vehsense.storage.BluetoothStorage
-import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 
 @Composable
 fun BTConnectScreen(

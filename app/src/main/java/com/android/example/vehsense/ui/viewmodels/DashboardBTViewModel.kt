@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class DashboardBTViewModel(application: Application) : AndroidViewModel(application) {
     private val storage = BluetoothStorage(getApplication<Application>())
+    private val btHandler = BluetoothHandler(context = getApplication<Application>(), onFrameUpdate = {}, onDevicesUpdated =  {}, onMessage = {} )
 
     private val _btIsOn = MutableStateFlow(false)
     val btIsOn: StateFlow<Boolean> = _btIsOn.asStateFlow()
@@ -30,6 +31,16 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
     fun updatePermissionState(hasPerm: Boolean) { _hasPermission.value = hasPerm }
     fun saveDeviceAddress(address: String) { storage.saveDeviceAddress(address) }
 
+    private fun updateSocketByAddress() {
+        val address = storage.getSavedDeviceAddress()
+        if (address != null) {
+            val newSocket = btHandler.connectToDeviceByAddress(address)
+            if (newSocket != null) {
+                updateSocket(newSocket)
+            }
+        }
+    }
+
     private val bluetoothStateReceiver = object : BroadcastReceiver() {
         @Suppress("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
@@ -38,10 +49,7 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
                 when (state) {
                     BluetoothAdapter.STATE_ON -> {
                         _btIsOn.value = true
-                        /*
-                        TO DO
-                        INITIATE SOCKET BASED ON THE ADDRESS OF THE ELM327 STORED IN THE STORAGE
-                        */
+                        updateSocketByAddress()
                     }
                     BluetoothAdapter.STATE_OFF -> {
                         _btIsOn.value = false
@@ -55,8 +63,9 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
         val stateChangingFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         getApplication<Application>().registerReceiver(bluetoothStateReceiver, stateChangingFilter)
 
-        val bt = BluetoothHandler(context = getApplication<Application>(), onFrameUpdate = {}, onDevicesUpdated =  {}, onMessage = {} )
-        updatePermissionState(bt.hasPermissions())
+        updatePermissionState(btHandler.hasPermissions())
+
+        updateSocketByAddress()
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         _btIsOn.value = bluetoothAdapter?.isEnabled == true

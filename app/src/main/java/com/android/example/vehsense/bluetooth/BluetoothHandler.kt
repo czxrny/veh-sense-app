@@ -29,6 +29,7 @@ class BluetoothHandler(
     private val onFrameUpdate: (ObdFrame) -> Unit,
 ) {
     private val REQUEST_CODE_BT = 1001
+    // Standard UUID For Bluetooth Serial Port Profile
     private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
@@ -104,6 +105,15 @@ class BluetoothHandler(
         context.registerReceiver(receiver, findingFilter)
 
         bluetoothAdapter?.startDiscovery()
+    }
+
+    @Suppress("MissingPermission")
+    fun connectToDeviceByAddress(macAddress: String): BluetoothSocket? {
+        val device: BluetoothDevice? = bluetoothAdapter?.getRemoteDevice(macAddress)
+        if (device != null) {
+            return getBtSocket(device)
+        }
+        return null
     }
 
     @Suppress("MissingPermission")
