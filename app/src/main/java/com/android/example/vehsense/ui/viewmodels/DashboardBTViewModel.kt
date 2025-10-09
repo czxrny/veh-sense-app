@@ -9,11 +9,14 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.lifecycle.AndroidViewModel
 import com.android.example.vehsense.bluetooth.BluetoothHandler
+import com.android.example.vehsense.storage.BluetoothStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class DashboardBTViewModel(application: Application) : AndroidViewModel(application) {
+    private val storage = BluetoothStorage(getApplication<Application>())
+
     private val _btIsOn = MutableStateFlow(false)
     val btIsOn: StateFlow<Boolean> = _btIsOn.asStateFlow()
 
@@ -25,6 +28,7 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
 
     fun updateSocket(newSocket: BluetoothSocket?) { _socket.value = newSocket }
     fun updatePermissionState(hasPerm: Boolean) { _hasPermission.value = hasPerm }
+    fun saveDeviceAddress(address: String) { storage.saveDeviceAddress(address) }
 
     private val bluetoothStateReceiver = object : BroadcastReceiver() {
         @Suppress("MissingPermission")
@@ -56,11 +60,6 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         _btIsOn.value = bluetoothAdapter?.isEnabled == true
-
-        /*
-        TO DO
-        INITIATE SOCKET BASED ON THE ADDRESS OF THE ELM327 STORED IN THE STORAGE
-        */
     }
 
     override fun onCleared() {

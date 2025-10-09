@@ -132,6 +132,27 @@ class BluetoothHandler(
         }.start()
     }
 
+    @Suppress("MissingPermission")
+    fun getBtSocket(device: BluetoothDevice): BluetoothSocket? {
+        Thread {
+            try {
+                socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+                bluetoothAdapter?.cancelDiscovery()
+                socket?.connect()
+
+                // TO DO - CHECK IF THE DEVICE IS ACTUALLY ELM
+                for (cfg in ObdConfig.entries) {
+                    sendCommand(cfg.command)
+                    Thread.sleep(1000)
+                }
+            } catch (e: IOException) {
+                Log.e("BT", "Connection Error", e)
+                onMessage("Could not connect to ${device.name}")
+            }
+        }.start()
+        return socket
+    }
+
     private fun sendCommand(cmd: String) {
         try {
             writer?.apply {

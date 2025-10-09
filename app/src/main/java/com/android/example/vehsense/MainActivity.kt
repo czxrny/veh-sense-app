@@ -36,7 +36,10 @@ class MainActivity : ComponentActivity() {
                     BTConnectScreen(
                         btIsOn = viewModel.btIsOn.collectAsState(),
                         hasPermission = viewModel.hasPermission.collectAsState(),
-                        onConnect = { viewModel.updateSocket(it) }
+                        onConnect = { socket ->
+                            viewModel.updateSocket(socket)
+                            viewModel.saveDeviceAddress(socket.remoteDevice.address)
+                        }
                     )
                 }
             }
