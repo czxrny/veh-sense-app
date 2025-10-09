@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.bluetooth.BluetoothHandler
 
 @Composable
-fun BTConnectScreen() {
+fun BTConnectScreen(viewModel: MainViewModel) {
     class BluetoothStateReceiver(
         private val onBluetoothChange: (Boolean) -> Unit
     ) : BroadcastReceiver() {

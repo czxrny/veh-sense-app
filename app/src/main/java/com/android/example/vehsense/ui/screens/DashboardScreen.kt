@@ -5,9 +5,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+
+class MainViewModel: ViewModel() {
+
+}
 
 @Composable
-fun DashboardScreen(onGoToBT: () -> Unit) {
+fun DashboardScreen(
+    viewModel: MainViewModel,
+    onGoToBT: () -> Unit) {
     Column(
         modifier = Modifier
             .padding(24.dp)
