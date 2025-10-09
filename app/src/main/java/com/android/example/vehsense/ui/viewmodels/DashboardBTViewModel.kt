@@ -32,7 +32,13 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
             if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
                 val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
                 when (state) {
-                    BluetoothAdapter.STATE_ON -> _btIsOn.value = true
+                    BluetoothAdapter.STATE_ON -> {
+                        _btIsOn.value = true
+                        /*
+                        TO DO
+                        INITIATE SOCKET BASED ON THE ADDRESS OF THE ELM327 STORED IN THE STORAGE
+                        */
+                    }
                     BluetoothAdapter.STATE_OFF -> {
                         _btIsOn.value = false
                         updateSocket(null) }
@@ -47,6 +53,14 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
 
         val bt = BluetoothHandler(context = getApplication<Application>(), onFrameUpdate = {}, onDevicesUpdated =  {}, onMessage = {} )
         updatePermissionState(bt.hasPermissions())
+
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        _btIsOn.value = bluetoothAdapter?.isEnabled == true
+
+        /*
+        TO DO
+        INITIATE SOCKET BASED ON THE ADDRESS OF THE ELM327 STORED IN THE STORAGE
+        */
     }
 
     override fun onCleared() {
