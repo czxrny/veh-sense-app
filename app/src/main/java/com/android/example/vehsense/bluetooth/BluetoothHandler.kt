@@ -56,7 +56,7 @@ class BluetoothHandler(
         }
     }
 
-    private fun getMissingPermissions(activity: android.app.Activity): List<String> {
+    private fun getMissingPermissions(): List<String> {
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             permissions.add(Manifest.permission.BLUETOOTH_SCAN)
@@ -71,8 +71,8 @@ class BluetoothHandler(
         return missing
     }
 
-    fun hasPermissions(activity: android.app.Activity): Boolean {
-        return getMissingPermissions(activity).isEmpty()
+    fun hasPermissions(): Boolean {
+        return getMissingPermissions().isEmpty()
     }
 
     fun bluetoothIsEnabled(): Boolean {
@@ -80,7 +80,7 @@ class BluetoothHandler(
     }
 
     fun checkAndRequestPermissions(activity: android.app.Activity, onGranted: () -> Unit) {
-        val missing = getMissingPermissions(activity)
+        val missing = getMissingPermissions()
 
         if (missing.isNotEmpty()) {
             ActivityCompat.requestPermissions(

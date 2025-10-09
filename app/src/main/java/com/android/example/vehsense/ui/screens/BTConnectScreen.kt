@@ -4,6 +4,7 @@ import android.app.Activity
 import android.provider.Settings
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -19,28 +20,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.bluetooth.BluetoothHandler
+import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 
 @Composable
-fun BTConnectScreen(viewModel: MainViewModel) {
-    class BluetoothStateReceiver(
-        private val onBluetoothChange: (Boolean) -> Unit
-    ) : BroadcastReceiver() {
-        @Suppress("MissingPermission")
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-                val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
-                when (state) {
-                    BluetoothAdapter.STATE_ON -> onBluetoothChange(true)
-                    BluetoothAdapter.STATE_OFF -> onBluetoothChange(false)
-                }
-            }
-        }
-    }
-
+fun BTConnectScreen(
+    btIsOn: State<Boolean>,
+    hasPermission: State<Boolean>,
+    onConnect: (BluetoothSocket) -> Unit
+) {
     val context = LocalContext.current
     var devices by remember { mutableStateOf(listOf<BluetoothDevice>()) }
     var bluetoothIsOn by remember { mutableStateOf(false) }
-    var hasPermission by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
 
     val bluetoothHandler = remember(context) {
@@ -52,53 +42,38 @@ fun BTConnectScreen(viewModel: MainViewModel) {
         )
     }
 
-    val btReceiver = BluetoothStateReceiver(onBluetoothChange = {bluetoothIsOn = it})
-    val stateChangingFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-    context.registerReceiver(btReceiver, stateChangingFilter)
-
-    DisposableEffect(Unit) {
-        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-        context.registerReceiver(btReceiver, filter)
-        onDispose {
-            context.unregisterReceiver(btReceiver)
-            bluetoothHandler.cleanup()
-        }
-    }
-
     LaunchedEffect(Unit) {
         bluetoothIsOn = bluetoothHandler.bluetoothIsEnabled()
-        hasPermission = bluetoothHandler.hasPermissions(context as Activity)
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        if (!hasPermission) {
-            Button(onClick = {
-                bluetoothHandler.checkAndRequestPermissions(context as Activity) {
-                    hasPermission = true
-                    bluetoothHandler.startDiscovery()
-                }
-            }) { Text("Grant Bluetooth Permission") }
-        } else if (!bluetoothIsOn) {
-            Button(onClick = {
-                context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-            }) { Text("Enable Bluetooth") }
+        if (!hasPermission.value) {
+            Text("Please grant BT Permissions and restart the App")
         } else {
-            Text("Available Devices:")
-            LazyColumn {
-                items(devices) { device ->
-                    val name = try {
-                        device.name ?: "Unknown Device"
-                    } catch (e: SecurityException) {
-                        Log.d("SecurityEx", "as")
-                        return@items
-                    }
-                    Button(onClick = { bluetoothHandler.connectToDevice(device) }) {
-                        Text(name)
+            if (!btIsOn.value) {
+                Button(onClick = {
+                    context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                }) { Text("Enable Bluetooth") }
+            } else {
+                Button(onClick = {
+                    bluetoothHandler.startDiscovery()
+                }) { Text("Start discovery") }
+                Text("Available Devices:")
+                LazyColumn {
+                    items(devices) { device ->
+                        val name = try {
+                            device.name ?: "Unknown Device"
+                        } catch (e: SecurityException) {
+                            Log.d("SecurityEx", "as")
+                            return@items
+                        }
+                        Button(onClick = { bluetoothHandler.connectToDevice(device) }) {
+                            Text(name)
+                        }
                     }
                 }
             }
         }
-
         if (message.isNotEmpty()) {
             Text("Status: $message")
         }
