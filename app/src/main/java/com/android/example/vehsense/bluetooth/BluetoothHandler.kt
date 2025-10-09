@@ -125,9 +125,6 @@ class BluetoothHandler(
                     Thread.sleep(1000)
                 }
                 onMessage("Connected to ${device.name}")
-
-                startObdPolling()
-
             } catch (e: IOException) {
                 Log.e("BT", "Connection Error", e)
                 onMessage("Could not connect to ${device.name}")
