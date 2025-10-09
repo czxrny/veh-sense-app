@@ -33,7 +33,9 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
                 val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
                 when (state) {
                     BluetoothAdapter.STATE_ON -> _btIsOn.value = true
-                    BluetoothAdapter.STATE_OFF -> _btIsOn.value = false
+                    BluetoothAdapter.STATE_OFF -> {
+                        _btIsOn.value = false
+                        updateSocket(null) }
                 }
             }
         }
