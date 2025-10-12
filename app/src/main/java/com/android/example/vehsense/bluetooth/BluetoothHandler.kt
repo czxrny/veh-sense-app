@@ -76,24 +76,6 @@ class BluetoothHandler(
         return getMissingPermissions().isEmpty()
     }
 
-    fun bluetoothIsEnabled(): Boolean {
-        return bluetoothAdapter?.isEnabled == true
-    }
-
-    fun checkAndRequestPermissions(activity: android.app.Activity, onGranted: () -> Unit) {
-        val missing = getMissingPermissions()
-
-        if (missing.isNotEmpty()) {
-            ActivityCompat.requestPermissions(
-                activity,
-                missing.toTypedArray(),
-                REQUEST_CODE_BT
-            )
-        } else {
-            onGranted()
-        }
-    }
-
     @Suppress("MissingPermission")
     fun startDiscovery() {
         if (bluetoothAdapter == null) {

@@ -1,5 +1,8 @@
 package com.android.example.vehsense
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import  com.android.example.vehsense.ui.screens.SplashScreen
 import  com.android.example.vehsense.ui.screens.DashboardScreen
 import  com.android.example.vehsense.ui.screens.BTConnectScreen
@@ -11,6 +14,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,6 +26,27 @@ import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        val missing = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missing.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                this,
+                missing.toTypedArray(),
+                1001
+            )
+        }
+
         setContent {
             val navController = rememberNavController()
 
