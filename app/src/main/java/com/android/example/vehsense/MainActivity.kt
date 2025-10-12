@@ -24,18 +24,32 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController = navController, startDestination = "splash") {
                 composable("splash") {
-                    SplashScreen(onFinished = { navController.navigate("login") })
+                    SplashScreen(onFinished = {
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    })
                 }
                 composable("login") {
                     LoginScreen(
-                        onGoToSignUp = { navController.navigate("signup") },
-                        onLoginSuccess = { navController.navigate("dashboard") }
+                        onGoToSignUp = {
+                            navController.navigate("signup")
+                        },
+                        onLoginSuccess = {
+                            navController.navigate("dashboard") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        }
                     )
                 }
                 composable("signup") {
                     SignUpScreen(
                         onGoBack = { navController.popBackStack() },
-                        onSignUpSuccess = { navController.navigate("dashboard") }
+                        onSignUpSuccess = {
+                            navController.navigate("dashboard") {
+                                popUpTo("signup") { inclusive = true }
+                            }
+                        }
                     )
                 }
                 composable("dashboard") {
