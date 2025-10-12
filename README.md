@@ -18,4 +18,4 @@ Creating working, report sending and fully functional App with minimal UI (for n
 - Track 0x0D Vehicle speed regression - large changes in short amount of time indicate that the driver slams the brakes.
 - Include: MAX SPEED, AVG SPEED (BOTH ARE EASY TO IMPLEMENT)
 - Also include: history of speed. create a map with each step and increment selected one if the current speed falls into it. This will give an information of most popular range of speed in given drive. 
-- 
+- CHECK IF THE BT DEVICE IS ACTUALLY ELM327 (DOES IT RESPOND CORRECTLY TO CONFIGURATION?)
