@@ -99,9 +99,7 @@ class BluetoothHandler(
     }
 
     @Suppress("MissingPermission")
-    fun connectToDevice(device: BluetoothDevice) {
-        onMessage("Connecting to ${device.name}")
-
+    fun getBtSocket(device: BluetoothDevice): BluetoothSocket? {
         Thread {
             try {
                 socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
@@ -111,31 +109,16 @@ class BluetoothHandler(
                 writer = BufferedWriter(OutputStreamWriter(socket!!.outputStream))
                 reader = BufferedReader(InputStreamReader(socket!!.inputStream))
 
-                // ELM327 basic setup
-                for (cfg in ObdConfig.entries) {
-                    sendCommand(cfg.command)
-                    Thread.sleep(1000)
-                }
-                onMessage("Connected to ${device.name}")
-            } catch (e: IOException) {
-                Log.e("BT", "Connection Error", e)
-                onMessage("Could not connect to ${device.name}")
-            }
-        }.start()
-    }
-
-    @Suppress("MissingPermission")
-    fun getBtSocket(device: BluetoothDevice): BluetoothSocket? {
-        Thread {
-            try {
-                socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
-                bluetoothAdapter?.cancelDiscovery()
-                socket?.connect()
-
-                // TO DO - CHECK IF THE DEVICE IS ACTUALLY ELM
-                for (cfg in ObdConfig.entries) {
-                    sendCommand(cfg.command)
-                    Thread.sleep(1000)
+                sendCommand("ATI")
+                val isELM = readResponse().contains("ELM", ignoreCase = true)
+                if (isELM) {
+                    for (cfg in ObdConfig.entries) {
+                        sendCommand(cfg.command)
+                        Thread.sleep(500)
+                        readResponse()
+                    }
+                } else {
+                    throw IllegalStateException("Not an ELM327 Device")
                 }
             } catch (e: IOException) {
                 Log.e("BT", "Connection Error", e)
@@ -156,6 +139,18 @@ class BluetoothHandler(
         }
     }
 
+    private fun readResponse(): String {
+        val sb = StringBuilder()
+        try {
+            while (reader?.ready() == true) {
+                sb.append(reader!!.readLine())
+            }
+        } catch (e: IOException) {
+            Log.e("ELM", "Read error", e)
+        }
+        return sb.toString()
+    }
+
     private fun startObdPolling() {
         Thread {
             while (socket?.isConnected == true) {
@@ -172,18 +167,6 @@ class BluetoothHandler(
                 onFrameUpdate(ObdFrame(obdValues))
             }
         }.start()
-    }
-
-    private fun readResponse(): String {
-        val sb = StringBuilder()
-        try {
-            while (reader?.ready() == true) {
-                sb.append(reader!!.readLine())
-            }
-        } catch (e: IOException) {
-            Log.e("ELM", "Read error", e)
-        }
-        return sb.toString()
     }
 
     fun cleanup() {
