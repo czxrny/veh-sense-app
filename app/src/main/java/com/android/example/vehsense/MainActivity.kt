@@ -3,6 +3,8 @@ package com.android.example.vehsense
 import  com.android.example.vehsense.ui.screens.SplashScreen
 import  com.android.example.vehsense.ui.screens.DashboardScreen
 import  com.android.example.vehsense.ui.screens.BTConnectScreen
+import com.android.example.vehsense.ui.screens.LoginScreen
+import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,7 +24,19 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController = navController, startDestination = "splash") {
                 composable("splash") {
-                    SplashScreen(onFinished = { navController.navigate("dashboard") })
+                    SplashScreen(onFinished = { navController.navigate("login") })
+                }
+                composable("login") {
+                    LoginScreen(
+                        onGoToSignUp = { navController.navigate("signup") },
+                        onLoginSuccess = { navController.navigate("dashboard") }
+                    )
+                }
+                composable("signup") {
+                    SignUpScreen(
+                        onGoBack = { navController.popBackStack() },
+                        onSignUpSuccess = { navController.navigate("dashboard") }
+                    )
                 }
                 composable("dashboard") {
                     val viewModel: DashboardBTViewModel = viewModel()

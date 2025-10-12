@@ -29,7 +29,6 @@ fun BTConnectScreen(
 ) {
     val context = LocalContext.current
     var devices by remember { mutableStateOf(listOf<BluetoothDevice>()) }
-    var bluetoothIsOn by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
 
     val bluetoothHandler = remember(context) {
@@ -39,10 +38,6 @@ fun BTConnectScreen(
             onDevicesUpdated = { devices = it },
             onFrameUpdate = { /* skipping polling for now */ }
         )
-    }
-
-    LaunchedEffect(Unit) {
-        bluetoothIsOn = bluetoothHandler.bluetoothIsEnabled()
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
