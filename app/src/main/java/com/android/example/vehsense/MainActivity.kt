@@ -10,10 +10,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 
 class MainActivity : ComponentActivity() {
@@ -24,9 +26,18 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController = navController, startDestination = "splash") {
                 composable("splash") {
+                    val context = LocalContext.current
+                    val userStorage = UserStorage(context)
+
                     SplashScreen(onFinished = {
-                        navController.navigate("login") {
-                            popUpTo("splash") { inclusive = true }
+                        if (!userStorage.isLoggedIn()) {
+                            navController.navigate("login") {
+                                popUpTo("splash") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate("dashboard") {
+                                popUpTo("splash") { inclusive = true }
+                            }
                         }
                     })
                 }

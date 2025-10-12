@@ -12,24 +12,31 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 
 @Composable
 fun SignUpScreen(
+    authViewModel: AuthViewModel = viewModel(),
     onGoBack: () -> Unit,
     onSignUpSuccess: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val errorMessage by authViewModel.errorMessage.collectAsState()
 
     Column(
         modifier = Modifier
@@ -82,11 +89,23 @@ fun SignUpScreen(
 
         Button(
             onClick = {
-                onSignUpSuccess()
+                authViewModel.signUp(name, email, password)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Sign up")
+        }
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage ?: "",
+                color = Color.Red,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        if (isAuthenticated) {
+            onSignUpSuccess()
         }
     }
 }
