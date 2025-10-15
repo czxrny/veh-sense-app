@@ -29,10 +29,10 @@ class UserStorage(private val context: Context) {
         )
     }
 
-    fun saveSession(userId: Int, token: String) {
+    fun saveSession(userId: Int, key: String) {
         prefs.edit().apply {
             putString(KEY_USER_ID, userId.toString())
-            putString(KEY_REFRESH, token)
+            putString(KEY_REFRESH, key)
             apply()
         }
     }

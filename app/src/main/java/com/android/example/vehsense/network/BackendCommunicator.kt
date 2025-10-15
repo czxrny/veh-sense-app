@@ -16,6 +16,44 @@ class BackendCommunicator {
     private val client = OkHttpClient()
     private val baseUrl = BuildConfig.BACKEND_URL
 
+    suspend fun getFreshToken(userId: Int, key: String): Result<AuthResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("user_id", userId)
+                    put("refresh_key", key)
+                }
+
+                val body = json.toString()
+                    .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+                val request = Request.Builder()
+                    .url("${baseUrl}/auth/refresh")
+                    .post(body)
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Refresh error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed = try {
+                        Gson().fromJson(bodyString, AuthResponse::class.java)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return withContext(Dispatchers.IO) {
             try {
@@ -32,12 +70,21 @@ class BackendCommunicator {
                     .post(body)
                     .build()
 
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val loginResponse = Gson().fromJson(response.body?.string(), AuthResponse::class.java)
-                    Result.success(loginResponse)
-                } else {
-                    Result.failure(Exception("Login error: ${response.code}"))
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Login error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed = try {
+                        Gson().fromJson(bodyString, AuthResponse::class.java)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
                 }
             } catch (e: Exception) {
                 Result.failure(e)

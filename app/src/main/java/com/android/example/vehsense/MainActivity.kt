@@ -9,10 +9,13 @@ import  com.android.example.vehsense.ui.screens.BTConnectScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -20,10 +23,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.android.example.vehsense.network.BackendCommunicator
 import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
+import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,14 +62,33 @@ class MainActivity : ComponentActivity() {
                 composable("splash") {
                     val context = LocalContext.current
                     val userStorage = UserStorage(context)
-
+                    val scope = rememberCoroutineScope()
                     SplashScreen(onFinished = {
-                        if (!userStorage.isLoggedIn()) {
-                            navController.navigate("login") {
-                                popUpTo("splash") { inclusive = true }
+                        if (userStorage.wasPreviouslyLoggedIn()) {
+                            val session = userStorage.getSession()
+                            if (session != null) {
+                                val backend = BackendCommunicator()
+                                val userId: Int = session.userId.toInt()
+                                val refreshKey = session.refreshKey
+                                scope.launch {
+                                    try {
+                                        Log.d("vehtest", refreshKey)
+                                        val authResponse = backend.getFreshToken(userId, refreshKey).getOrThrow()
+                                        userStorage.saveSession(authResponse.localId, authResponse.refreshKey)
+
+                                        navController.navigate("dashboard") {
+                                            popUpTo("splash") { inclusive = true }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.d("vehtest", e.toString())
+                                        navController.navigate("login") {
+                                            popUpTo("splash") { inclusive = true }
+                                        }
+                                    }
+                                }
                             }
                         } else {
-                            navController.navigate("dashboard") {
+                            navController.navigate("login") {
                                 popUpTo("splash") { inclusive = true }
                             }
                         }
