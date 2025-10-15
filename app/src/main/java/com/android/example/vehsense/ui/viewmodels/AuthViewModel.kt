@@ -24,7 +24,7 @@ class AuthViewModel(application: Application): AndroidViewModel(application) {
             try {
                 val response = communicator.login(email, password)
                 response.onSuccess { loginResponse ->
-                    sessionManager.saveSession(loginResponse.localId, loginResponse.token)
+                    sessionManager.saveSession(loginResponse.localId, loginResponse.refreshKey)
                     _isAuthenticated.value = true
                     _errorMessage.value = null
                 }.onFailure { e ->
@@ -43,7 +43,7 @@ class AuthViewModel(application: Application): AndroidViewModel(application) {
             try {
                 val response = communicator.signup(name, email, password)
                 response.onSuccess { signUpResponse ->
-                    sessionManager.saveSession(signUpResponse.localId, signUpResponse.token)
+                    sessionManager.saveSession(signUpResponse.localId, signUpResponse.refreshKey)
                     _isAuthenticated.value = true
                     _errorMessage.value = null
                 }.onFailure { e ->

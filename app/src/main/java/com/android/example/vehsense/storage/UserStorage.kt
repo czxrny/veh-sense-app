@@ -6,14 +6,14 @@ import androidx.security.crypto.MasterKey
 
 data class UserSession(
     val userId: String,
-    val token: String
+    val refreshKey: String
 )
 
 class UserStorage(private val context: Context) {
     companion object {
         private const val PREFS_NAME = "secure_prefs"
         private const val KEY_USER_ID = "user_id"
-        private const val KEY_TOKEN = "token"
+        private const val KEY_REFRESH = "refresh_key"
     }
 
     private val prefs by lazy {
@@ -32,17 +32,17 @@ class UserStorage(private val context: Context) {
     fun saveSession(userId: Int, token: String) {
         prefs.edit().apply {
             putString(KEY_USER_ID, userId.toString())
-            putString(KEY_TOKEN, token)
+            putString(KEY_REFRESH, token)
             apply()
         }
     }
 
     fun getSession(): UserSession? {
         val id = prefs.getString(KEY_USER_ID, null)
-        val token = prefs.getString(KEY_TOKEN, null)
+        val key = prefs.getString(KEY_REFRESH, null)
 
-        return if (id != null && token != null) {
-            UserSession(id, token)
+        return if (id != null && key != null) {
+            UserSession(id, key)
         } else {
             null
         }
@@ -52,5 +52,5 @@ class UserStorage(private val context: Context) {
         prefs.edit().clear().apply()
     }
 
-    fun isLoggedIn(): Boolean = getSession() != null
+    fun wasPreviouslyLoggedIn(): Boolean = getSession() != null
 }
