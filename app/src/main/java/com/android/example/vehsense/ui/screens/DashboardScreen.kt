@@ -16,7 +16,9 @@ import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 @Composable
 fun DashboardScreen(
     viewModel: DashboardBTViewModel,
-    onGoToBT: () -> Unit
+    onGoToBT: () -> Unit,
+    onGoToVehicles: () -> Unit,
+    onGoToReports: () -> Unit
 ) {
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
@@ -39,6 +41,20 @@ fun DashboardScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Select Your BT Device")
+        }
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = onGoToVehicles,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Check out your vehicles")
+        }
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = onGoToReports,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("See your reports")
         }
         if (!rideIsActive) {
             Button(onClick = {

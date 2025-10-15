@@ -21,6 +21,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.example.vehsense.storage.UserStorage
+import com.android.example.vehsense.ui.screens.ReportsScreen
+import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 
 class MainActivity : ComponentActivity() {
@@ -91,7 +93,12 @@ class MainActivity : ComponentActivity() {
                 }
                 composable("dashboard") {
                     val viewModel: DashboardBTViewModel = viewModel()
-                    DashboardScreen(viewModel, onGoToBT = { navController.navigate("btconnect") })
+                    DashboardScreen(
+                        viewModel,
+                        onGoToBT = { navController.navigate("btconnect") },
+                        onGoToVehicles = { navController.navigate("vehicles") },
+                        onGoToReports = { navController.navigate("reports") }
+                    )
                 }
                 composable("btconnect") { backStackEntry ->
                     val parentEntry = remember(backStackEntry) {
@@ -106,6 +113,12 @@ class MainActivity : ComponentActivity() {
                             viewModel.saveDeviceAddress(socket.remoteDevice.address)
                         }
                     )
+                }
+                composable("reports") {
+                    ReportsScreen()
+                }
+                composable("vehicles") {
+                    VehiclesScreen()
                 }
             }
         }
