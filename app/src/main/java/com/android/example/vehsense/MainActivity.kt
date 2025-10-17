@@ -2,6 +2,7 @@ package com.android.example.vehsense
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import  com.android.example.vehsense.ui.screens.SplashScreen
 import  com.android.example.vehsense.ui.screens.DashboardScreen
@@ -20,9 +21,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.android.example.vehsense.network.BackendCommunicator
 import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.ReportsScreen
@@ -72,11 +75,10 @@ class MainActivity : ComponentActivity() {
                                 val refreshKey = session.refreshKey
                                 scope.launch {
                                     try {
-                                        Log.d("vehtest", refreshKey)
                                         val authResponse = backend.getFreshToken(userId, refreshKey).getOrThrow()
                                         userStorage.saveSession(authResponse.localId, authResponse.refreshKey)
 
-                                        navController.navigate("dashboard") {
+                                        navController.navigate("dashboard/${authResponse.localId}/${authResponse.token}") {
                                             popUpTo("splash") { inclusive = true }
                                         }
                                     } catch (e: Exception) {
@@ -99,8 +101,8 @@ class MainActivity : ComponentActivity() {
                         onGoToSignUp = {
                             navController.navigate("signup")
                         },
-                        onLoginSuccess = {
-                            navController.navigate("dashboard") {
+                        onLoginSuccess = { userId, token ->
+                            navController.navigate("dashboard/$userId/$token") {
                                 popUpTo("login") { inclusive = true }
                             }
                         }
@@ -109,14 +111,20 @@ class MainActivity : ComponentActivity() {
                 composable("signup") {
                     SignUpScreen(
                         onGoBack = { navController.popBackStack() },
-                        onSignUpSuccess = {
-                            navController.navigate("dashboard") {
+                        onSignUpSuccess = { userId, token ->
+                            navController.navigate("dashboard/$userId/$token") {
                                 popUpTo("signup") { inclusive = true }
                             }
                         }
                     )
                 }
-                composable("dashboard") {
+                composable("dashboard/{userId}/{token}", arguments = listOf(
+                    navArgument("userId") { type = NavType.IntType },
+                    navArgument("token") { type = NavType.StringType }
+                )) { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getInt("userId")
+                    val token = backStackEntry.arguments?.getString("token")
+
                     val viewModel: DashboardBTViewModel = viewModel()
                     DashboardScreen(
                         viewModel,

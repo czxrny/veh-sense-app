@@ -10,11 +10,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(application: Application): AndroidViewModel(application) {
+    data class Session (
+        var userId: Int,
+        var token: String
+    )
+    private val _currentSession = MutableStateFlow<Session?>(null)
+    val currentSession: StateFlow<Session?> = _currentSession
+
     private val communicator = BackendCommunicator()
     private val sessionManager = UserStorage(getApplication<Application>())
-
-    private val _isAuthenticated = MutableStateFlow(false)
-    val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -25,14 +29,12 @@ class AuthViewModel(application: Application): AndroidViewModel(application) {
                 val response = communicator.login(email, password)
                 response.onSuccess { loginResponse ->
                     sessionManager.saveSession(loginResponse.localId, loginResponse.refreshKey)
-                    _isAuthenticated.value = true
                     _errorMessage.value = null
+                    _currentSession.value = Session(loginResponse.localId, loginResponse.refreshKey)
                 }.onFailure { e ->
-                    _isAuthenticated.value = false
                     _errorMessage.value = e.message ?: "Unknown error"
                 }
             } catch (e: Exception) {
-                _isAuthenticated.value = false
                 _errorMessage.value = e.message ?: "Unknown error"
             }
         }
@@ -44,14 +46,12 @@ class AuthViewModel(application: Application): AndroidViewModel(application) {
                 val response = communicator.signup(name, email, password)
                 response.onSuccess { signUpResponse ->
                     sessionManager.saveSession(signUpResponse.localId, signUpResponse.refreshKey)
-                    _isAuthenticated.value = true
                     _errorMessage.value = null
+                    _currentSession.value = Session(signUpResponse.localId, signUpResponse.refreshKey)
                 }.onFailure { e ->
-                    _isAuthenticated.value = false
                     _errorMessage.value = e.message ?: "Unknown error"
                 }
             } catch (e: Exception) {
-                _isAuthenticated.value = false
                 _errorMessage.value = e.message ?: "Unknown error"
             }
         }

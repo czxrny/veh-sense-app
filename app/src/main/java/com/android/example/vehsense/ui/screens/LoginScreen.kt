@@ -12,6 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,12 +31,16 @@ import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 fun LoginScreen(
     authViewModel: AuthViewModel = viewModel(),
     onGoToSignUp: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (Int, String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
+    val session by authViewModel.currentSession.collectAsState()
+
+    LaunchedEffect(session) {
+        session?.let { onLoginSuccess(it.userId, it.token) }
+    }
 
     Column(
         modifier = Modifier
@@ -98,10 +103,6 @@ fun LoginScreen(
                 color = Color.Red,
                 modifier = Modifier.padding(top = 8.dp)
             )
-        }
-
-        if (isAuthenticated) {
-            onLoginSuccess()
         }
     }
 }
