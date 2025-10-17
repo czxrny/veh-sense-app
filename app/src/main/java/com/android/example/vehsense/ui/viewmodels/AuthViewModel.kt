@@ -1,25 +1,18 @@
 package com.android.example.vehsense.ui.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.network.BackendCommunicator
-import com.android.example.vehsense.storage.UserStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel(application: Application): AndroidViewModel(application) {
-    data class Session (
-        var userId: Int,
-        var token: String
-    )
-    private val _currentSession = MutableStateFlow<Session?>(null)
-    val currentSession: StateFlow<Session?> = _currentSession
+class AuthViewModel : ViewModel() {
+    private val _currentSession = MutableStateFlow<AuthResponse?>(null)
+    val currentSession: StateFlow<AuthResponse?> = _currentSession
 
     private val communicator = BackendCommunicator()
-    private val sessionManager = UserStorage(getApplication<Application>())
-
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
@@ -28,9 +21,8 @@ class AuthViewModel(application: Application): AndroidViewModel(application) {
             try {
                 val response = communicator.login(email, password)
                 response.onSuccess { loginResponse ->
-                    sessionManager.saveSession(loginResponse.localId, loginResponse.refreshKey)
                     _errorMessage.value = null
-                    _currentSession.value = Session(loginResponse.localId, loginResponse.refreshKey)
+                    _currentSession.value = loginResponse
                 }.onFailure { e ->
                     _errorMessage.value = e.message ?: "Unknown error"
                 }
@@ -45,9 +37,8 @@ class AuthViewModel(application: Application): AndroidViewModel(application) {
             try {
                 val response = communicator.signup(name, email, password)
                 response.onSuccess { signUpResponse ->
-                    sessionManager.saveSession(signUpResponse.localId, signUpResponse.refreshKey)
                     _errorMessage.value = null
-                    _currentSession.value = Session(signUpResponse.localId, signUpResponse.refreshKey)
+                    _currentSession.value = signUpResponse
                 }.onFailure { e ->
                     _errorMessage.value = e.message ?: "Unknown error"
                 }

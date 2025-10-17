@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                                             popUpTo("splash") { inclusive = true }
                                         }
                                     } catch (e: Exception) {
-                                        Log.d("vehtest", e.toString())
+                                        Log.d("storage-login-error", e.toString())
                                         navController.navigate("login") {
                                             popUpTo("splash") { inclusive = true }
                                         }
@@ -97,22 +97,30 @@ class MainActivity : ComponentActivity() {
                     })
                 }
                 composable("login") {
+                    val context = LocalContext.current
+                    val userStorage = UserStorage(context)
+
                     LoginScreen(
                         onGoToSignUp = {
                             navController.navigate("signup")
                         },
-                        onLoginSuccess = { userId, token ->
-                            navController.navigate("dashboard/$userId/$token") {
+                        onLoginSuccess = {
+                            userStorage.saveSession(it.localId, it.refreshKey)
+                            navController.navigate("dashboard/${it.localId}/${it.token}") {
                                 popUpTo("login") { inclusive = true }
                             }
                         }
                     )
                 }
                 composable("signup") {
+                    val context = LocalContext.current
+                    val userStorage = UserStorage(context)
+
                     SignUpScreen(
                         onGoBack = { navController.popBackStack() },
-                        onSignUpSuccess = { userId, token ->
-                            navController.navigate("dashboard/$userId/$token") {
+                        onSignUpSuccess = {
+                            userStorage.saveSession(it.localId, it.refreshKey)
+                            navController.navigate("dashboard/${it.localId}/${it.token}") {
                                 popUpTo("signup") { inclusive = true }
                             }
                         }

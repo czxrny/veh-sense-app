@@ -25,13 +25,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 
 @Composable
 fun SignUpScreen(
     authViewModel: AuthViewModel = viewModel(),
     onGoBack: () -> Unit,
-    onSignUpSuccess: (Int, String) -> Unit
+    onSignUpSuccess: (AuthResponse) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -40,7 +41,7 @@ fun SignUpScreen(
     val session by authViewModel.currentSession.collectAsState()
 
     LaunchedEffect(session) {
-        session?.let { onSignUpSuccess(it.userId, it.token) }
+        session?.let { onSignUpSuccess(it) }
     }
 
     Column(
