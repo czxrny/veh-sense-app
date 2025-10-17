@@ -1,4 +1,6 @@
 package com.android.example.vehsense.repository
 
-class BackendRepository {
+object BackendRepository {
+    var userId: Int? = null
+    var token: String? = null
 }

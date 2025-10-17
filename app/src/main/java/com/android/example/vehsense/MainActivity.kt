@@ -27,10 +27,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.android.example.vehsense.network.BackendCommunicator
+import com.android.example.vehsense.repository.BackendRepository
 import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
-import com.android.example.vehsense.ui.viewmodels.AuthViewModel
+import com.android.example.vehsense.ui.viewmodels.BackendViewModel
+import com.android.example.vehsense.ui.viewmodels.BackendViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 import kotlinx.coroutines.launch
 
@@ -78,7 +80,10 @@ class MainActivity : ComponentActivity() {
                                         val authResponse = backend.getFreshToken(userId, refreshKey).getOrThrow()
                                         userStorage.saveSession(authResponse.localId, authResponse.refreshKey)
 
-                                        navController.navigate("dashboard/${authResponse.localId}/${authResponse.token}") {
+                                        BackendRepository.userId = authResponse.localId
+                                        BackendRepository.token = authResponse.token
+
+                                        navController.navigate("dashboard") {
                                             popUpTo("splash") { inclusive = true }
                                         }
                                     } catch (e: Exception) {
@@ -106,7 +111,11 @@ class MainActivity : ComponentActivity() {
                         },
                         onLoginSuccess = {
                             userStorage.saveSession(it.localId, it.refreshKey)
-                            navController.navigate("dashboard/${it.localId}/${it.token}") {
+
+                            BackendRepository.userId = it.localId
+                            BackendRepository.token = it.token
+
+                            navController.navigate("dashboard") {
                                 popUpTo("login") { inclusive = true }
                             }
                         }
@@ -120,18 +129,20 @@ class MainActivity : ComponentActivity() {
                         onGoBack = { navController.popBackStack() },
                         onSignUpSuccess = {
                             userStorage.saveSession(it.localId, it.refreshKey)
-                            navController.navigate("dashboard/${it.localId}/${it.token}") {
+
+                            BackendRepository.userId = it.localId
+                            BackendRepository.token = it.token
+
+                            navController.navigate("dashboard") {
                                 popUpTo("signup") { inclusive = true }
                             }
                         }
                     )
                 }
-                composable("dashboard/{userId}/{token}", arguments = listOf(
-                    navArgument("userId") { type = NavType.IntType },
-                    navArgument("token") { type = NavType.StringType }
-                )) { backStackEntry ->
-                    val userId = backStackEntry.arguments?.getInt("userId")
-                    val token = backStackEntry.arguments?.getString("token")
+                composable("dashboard") {
+                    if (BackendRepository.userId == null || BackendRepository.token == null) {
+                        throw IllegalArgumentException("DashboardScreen requires Backend Repository to be initialized")
+                    }
 
                     val viewModel: DashboardBTViewModel = viewModel()
                     DashboardScreen(
@@ -156,10 +167,16 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("reports") {
-                    ReportsScreen()
+                    ReportsScreen(
+                        userId = requireNotNull(BackendRepository.userId),
+                        token = requireNotNull(BackendRepository.token)
+                    )
                 }
                 composable("vehicles") {
-                    VehiclesScreen()
+                    VehiclesScreen(
+                        userId = requireNotNull(BackendRepository.userId),
+                        token = requireNotNull(BackendRepository.token)
+                    )
                 }
             }
         }
