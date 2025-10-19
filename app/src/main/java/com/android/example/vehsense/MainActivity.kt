@@ -60,17 +60,17 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        UserStorage.init(applicationContext)
+
         setContent {
             val navController = rememberNavController()
 
             NavHost(navController = navController, startDestination = "splash") {
                 composable("splash") {
-                    val context = LocalContext.current
-                    val userStorage = UserStorage(context)
                     val scope = rememberCoroutineScope()
                     SplashScreen(onFinished = {
-                        if (userStorage.wasPreviouslyLoggedIn()) {
-                            val session = userStorage.getSession()
+                        if (UserStorage.wasPreviouslyLoggedIn()) {
+                            val session = UserStorage.getSession()
                             if (session != null) {
                                 val backend = BackendCommunicator()
                                 val userId: Int = session.userId.toInt()
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                                 scope.launch {
                                     try {
                                         val authResponse = backend.getFreshToken(userId, refreshKey).getOrThrow()
-                                        userStorage.saveSession(authResponse.localId, authResponse.refreshKey)
+                                        UserStorage.saveSession(authResponse.localId, authResponse.refreshKey)
 
                                         BackendRepository.userId = authResponse.localId
                                         BackendRepository.token = authResponse.token
@@ -102,15 +102,12 @@ class MainActivity : ComponentActivity() {
                     })
                 }
                 composable("login") {
-                    val context = LocalContext.current
-                    val userStorage = UserStorage(context)
-
                     LoginScreen(
                         onGoToSignUp = {
                             navController.navigate("signup")
                         },
                         onLoginSuccess = {
-                            userStorage.saveSession(it.localId, it.refreshKey)
+                            UserStorage.saveSession(it.localId, it.refreshKey)
 
                             BackendRepository.userId = it.localId
                             BackendRepository.token = it.token
@@ -122,13 +119,10 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("signup") {
-                    val context = LocalContext.current
-                    val userStorage = UserStorage(context)
-
                     SignUpScreen(
                         onGoBack = { navController.popBackStack() },
                         onSignUpSuccess = {
-                            userStorage.saveSession(it.localId, it.refreshKey)
+                            UserStorage.saveSession(it.localId, it.refreshKey)
 
                             BackendRepository.userId = it.localId
                             BackendRepository.token = it.token

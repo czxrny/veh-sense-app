@@ -1,6 +1,7 @@
 package com.android.example.vehsense.storage
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -9,18 +10,19 @@ data class UserSession(
     val refreshKey: String
 )
 
-class UserStorage(private val context: Context) {
-    companion object {
-        private const val PREFS_NAME = "secure_prefs"
-        private const val KEY_USER_ID = "user_id"
-        private const val KEY_REFRESH = "refresh_key"
-    }
+object UserStorage {
+    private const val PREFS_NAME = "secure_prefs"
+    private const val KEY_USER_ID = "user_id"
+    private const val KEY_REFRESH = "refresh_key"
 
-    private val prefs by lazy {
+    private lateinit var prefs: SharedPreferences
+
+    fun init(context: Context) {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
-        EncryptedSharedPreferences.create(
+
+        prefs = EncryptedSharedPreferences.create(
             context,
             PREFS_NAME,
             masterKey,
