@@ -3,6 +3,7 @@ package com.android.example.vehsense.network
 import android.util.Log
 import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.model.AuthResponse
+import com.android.example.vehsense.model.Vehicle
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -132,24 +133,35 @@ class BackendCommunicator {
         }
     }
 
-
-    fun test() {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url("$baseUrl/ping")
-            .build()
-
-        Thread {
+    suspend fun getVehicles(token: String): Result<List<Vehicle>> {
+        return withContext(Dispatchers.IO) {
             try {
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    Log.d("HTTP", "Success: ${response.body?.string()}")
-                } else {
-                    Log.d("HTTP", "Error: ${response.code}")
+                val request = Request.Builder()
+                    .url("${baseUrl}/vehicles")
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Login error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed: List<Vehicle> = try {
+                        val listType = object : com.google.gson.reflect.TypeToken<List<Vehicle>>() {}.type
+                        Gson().fromJson(bodyString, listType)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Result.failure(e)
             }
-        }.start()
+        }
     }
 }
