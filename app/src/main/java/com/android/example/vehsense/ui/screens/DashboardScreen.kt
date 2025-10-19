@@ -34,27 +34,27 @@ fun DashboardScreen(
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Dashboard", style = MaterialTheme.typography.headlineSmall)
+        Text("Dashboard", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(32.dp))
         Button(
             onClick = onGoToBT,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Select Your BT Device")
+            Text("Select Your BT Device", style = MaterialTheme.typography.bodyLarge)
         }
         Spacer(Modifier.height(32.dp))
         Button(
             onClick = onGoToVehicles,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Check out your vehicles")
+            Text("Check out your vehicles", style = MaterialTheme.typography.bodyLarge)
         }
         Spacer(Modifier.height(32.dp))
         Button(
             onClick = onGoToReports,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("See your reports")
+            Text("See your reports", style = MaterialTheme.typography.bodyLarge)
         }
         if (!rideIsActive) {
             Button(onClick = {
@@ -67,7 +67,7 @@ fun DashboardScreen(
                     disabledContainerColor = Color.Gray,
                     disabledContentColor = Color.DarkGray
                 )) {
-                Text("Start The Ride!")
+                Text("Start The Ride!", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             Button(onClick = {
@@ -77,7 +77,7 @@ fun DashboardScreen(
                     containerColor = Color.Red,
                     contentColor = Color.White
                 )) {
-                Text("Stop The Ride")
+                Text("Stop The Ride", style = MaterialTheme.typography.bodyLarge)
             }
         }
     }

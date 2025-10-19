@@ -31,6 +31,7 @@ import com.android.example.vehsense.repository.BackendRepository
 import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
+import com.android.example.vehsense.ui.theme.VehSenseTheme
 import com.android.example.vehsense.ui.viewmodels.BackendViewModel
 import com.android.example.vehsense.ui.viewmodels.BackendViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
@@ -63,114 +64,121 @@ class MainActivity : ComponentActivity() {
         UserStorage.init(applicationContext)
 
         setContent {
-            val navController = rememberNavController()
+            VehSenseTheme {
+                val navController = rememberNavController()
 
-            NavHost(navController = navController, startDestination = "splash") {
-                composable("splash") {
-                    val scope = rememberCoroutineScope()
-                    SplashScreen(onFinished = {
-                        if (UserStorage.wasPreviouslyLoggedIn()) {
-                            val session = UserStorage.getSession()
-                            if (session != null) {
-                                val backend = BackendCommunicator()
-                                val userId: Int = session.userId.toInt()
-                                val refreshKey = session.refreshKey
-                                scope.launch {
-                                    try {
-                                        val authResponse = backend.getFreshToken(userId, refreshKey).getOrThrow()
-                                        UserStorage.saveSession(authResponse.localId, authResponse.refreshKey)
+                NavHost(navController = navController, startDestination = "splash") {
+                    composable("splash") {
+                        val scope = rememberCoroutineScope()
+                        SplashScreen(onFinished = {
+                            if (UserStorage.wasPreviouslyLoggedIn()) {
+                                val session = UserStorage.getSession()
+                                if (session != null) {
+                                    val backend = BackendCommunicator()
+                                    val userId: Int = session.userId.toInt()
+                                    val refreshKey = session.refreshKey
+                                    scope.launch {
+                                        try {
+                                            val authResponse =
+                                                backend.getFreshToken(userId, refreshKey)
+                                                    .getOrThrow()
+                                            UserStorage.saveSession(
+                                                authResponse.localId,
+                                                authResponse.refreshKey
+                                            )
 
-                                        BackendRepository.userId = authResponse.localId
-                                        BackendRepository.token = authResponse.token
+                                            BackendRepository.userId = authResponse.localId
+                                            BackendRepository.token = authResponse.token
 
-                                        navController.navigate("dashboard") {
-                                            popUpTo("splash") { inclusive = true }
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.d("storage-login-error", e.toString())
-                                        navController.navigate("login") {
-                                            popUpTo("splash") { inclusive = true }
+                                            navController.navigate("dashboard") {
+                                                popUpTo("splash") { inclusive = true }
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.d("storage-login-error", e.toString())
+                                            navController.navigate("login") {
+                                                popUpTo("splash") { inclusive = true }
+                                            }
                                         }
                                     }
                                 }
+                            } else {
+                                navController.navigate("login") {
+                                    popUpTo("splash") { inclusive = true }
+                                }
                             }
-                        } else {
-                            navController.navigate("login") {
-                                popUpTo("splash") { inclusive = true }
-                            }
-                        }
-                    })
-                }
-                composable("login") {
-                    LoginScreen(
-                        onGoToSignUp = {
-                            navController.navigate("signup")
-                        },
-                        onLoginSuccess = {
-                            UserStorage.saveSession(it.localId, it.refreshKey)
-
-                            BackendRepository.userId = it.localId
-                            BackendRepository.token = it.token
-
-                            navController.navigate("dashboard") {
-                                popUpTo("login") { inclusive = true }
-                            }
-                        }
-                    )
-                }
-                composable("signup") {
-                    SignUpScreen(
-                        onGoBack = { navController.popBackStack() },
-                        onSignUpSuccess = {
-                            UserStorage.saveSession(it.localId, it.refreshKey)
-
-                            BackendRepository.userId = it.localId
-                            BackendRepository.token = it.token
-
-                            navController.navigate("dashboard") {
-                                popUpTo("signup") { inclusive = true }
-                            }
-                        }
-                    )
-                }
-                composable("dashboard") {
-                    if (BackendRepository.userId == null || BackendRepository.token == null) {
-                        throw IllegalArgumentException("DashboardScreen requires Backend Repository to be initialized")
+                        })
                     }
+                    composable("login") {
+                        LoginScreen(
+                            onGoToSignUp = {
+                                navController.navigate("signup")
+                            },
+                            onLoginSuccess = {
+                                UserStorage.saveSession(it.localId, it.refreshKey)
 
-                    val viewModel: DashboardBTViewModel = viewModel()
-                    DashboardScreen(
-                        viewModel,
-                        onGoToBT = { navController.navigate("btconnect") },
-                        onGoToVehicles = { navController.navigate("vehicles") },
-                        onGoToReports = { navController.navigate("reports") }
-                    )
-                }
-                composable("btconnect") { backStackEntry ->
-                    val parentEntry = remember(backStackEntry) {
-                        navController.getBackStackEntry("dashboard")
+                                BackendRepository.userId = it.localId
+                                BackendRepository.token = it.token
+
+                                navController.navigate("dashboard") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        )
                     }
-                    val viewModel: DashboardBTViewModel = viewModel(parentEntry)
-                    BTConnectScreen(
-                        btIsOn = viewModel.btIsOn.collectAsState(),
-                        hasPermission = viewModel.hasPermission.collectAsState(),
-                        onConnect = { socket ->
-                            viewModel.updateSocket(socket)
-                            viewModel.saveDeviceAddress(socket.remoteDevice.address)
+                    composable("signup") {
+                        SignUpScreen(
+                            onGoBack = { navController.popBackStack() },
+                            onSignUpSuccess = {
+                                UserStorage.saveSession(it.localId, it.refreshKey)
+
+                                BackendRepository.userId = it.localId
+                                BackendRepository.token = it.token
+
+                                navController.navigate("dashboard") {
+                                    popUpTo("signup") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("dashboard") {
+                        if (BackendRepository.userId == null || BackendRepository.token == null) {
+                            throw IllegalArgumentException("DashboardScreen requires Backend Repository to be initialized")
                         }
-                    )
-                }
-                composable("reports") {
-                    ReportsScreen(
-                        userId = requireNotNull(BackendRepository.userId),
-                        token = requireNotNull(BackendRepository.token)
-                    )
-                }
-                composable("vehicles") {
-                    VehiclesScreen(
-                        userId = requireNotNull(BackendRepository.userId),
-                        token = requireNotNull(BackendRepository.token)
-                    )
+
+                        val viewModel: DashboardBTViewModel = viewModel()
+                        DashboardScreen(
+                            viewModel,
+                            onGoToBT = { navController.navigate("btconnect") },
+                            onGoToVehicles = { navController.navigate("vehicles") },
+                            onGoToReports = { navController.navigate("reports") }
+                        )
+                    }
+                    composable("btconnect") { backStackEntry ->
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("dashboard")
+                        }
+                        val viewModel: DashboardBTViewModel = viewModel(parentEntry)
+                        BTConnectScreen(
+                            btIsOn = viewModel.btIsOn.collectAsState(),
+                            hasPermission = viewModel.hasPermission.collectAsState(),
+                            onConnect = { socket ->
+                                viewModel.updateSocket(socket)
+                                viewModel.saveDeviceAddress(socket.remoteDevice.address)
+                            }
+                        )
+                    }
+                    composable("reports") {
+                        ReportsScreen(
+                            userId = requireNotNull(BackendRepository.userId),
+                            token = requireNotNull(BackendRepository.token)
+                        )
+                    }
+                    composable("vehicles") {
+                        VehiclesScreen(
+                            userId = requireNotNull(BackendRepository.userId),
+                            token = requireNotNull(BackendRepository.token)
+                        )
+                    }
                 }
             }
         }

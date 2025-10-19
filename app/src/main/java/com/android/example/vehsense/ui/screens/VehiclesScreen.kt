@@ -40,7 +40,7 @@ fun VehiclesScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text("This is the VEHICLE SCREEN",)
+        Text("This is the VEHICLE SCREEN", style = MaterialTheme.typography.titleLarge)
 
         Spacer(modifier = Modifier.height(16.dp))
 
