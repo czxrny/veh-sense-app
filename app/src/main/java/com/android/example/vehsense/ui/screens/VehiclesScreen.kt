@@ -18,10 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.ui.viewmodels.BackendViewModel
-import com.android.example.vehsense.ui.viewmodels.BackendViewModelFactory
+import com.android.example.vehsense.ui.viewmodels.SharedBackendViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
-import com.android.example.vehsense.ui.viewmodels.VehicleViewModelFactory
 
 @Composable
 fun VehiclesScreen(
@@ -29,7 +27,7 @@ fun VehiclesScreen(
     token: String
 ) {
     val viewModel: VehicleViewModel = viewModel(
-        factory = VehicleViewModelFactory(userId, token)
+        factory = SharedBackendViewModelFactory(userId, token)
     )
 
     val vehicles by viewModel.vehicles.collectAsState()
