@@ -181,9 +181,12 @@ class MainActivity : ComponentActivity() {
                         val viewModel: DashboardBTViewModel = viewModel(parentEntry)
 
                         RideScreen(
+                            userId = requireNotNull(BackendRepository.userId),
+                            token = requireNotNull(BackendRepository.token),
+                            btSocket = requireNotNull(viewModel.getBtSocket()),
                             onForceBack = {
                                 navController.navigate("dashboard") {
-                                    popUpTo("splash") { inclusive = true }
+                                    popUpTo("ride") { inclusive = true }
                                 }
                             },
                             hasPermission = viewModel.hasPermission.collectAsState(),

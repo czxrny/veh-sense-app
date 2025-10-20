@@ -28,8 +28,9 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
     val socket: StateFlow<BluetoothSocket?> = _socket.asStateFlow()
 
     fun updateSocket(newSocket: BluetoothSocket?) { _socket.value = newSocket }
-    fun updatePermissionState(hasPerm: Boolean) { _hasPermission.value = hasPerm }
+    private fun updatePermissionState(hasPerm: Boolean) { _hasPermission.value = hasPerm }
     fun saveDeviceAddress(address: String) { storage.saveDeviceAddress(address) }
+    fun getBtSocket(): BluetoothSocket? { return _socket.value }
 
     private fun updateSocketByAddress() {
         val address = storage.getSavedDeviceAddress()
@@ -73,6 +74,7 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
 
     override fun onCleared() {
         super.onCleared()
+        _socket.value?.close()
         getApplication<Application>().unregisterReceiver(bluetoothStateReceiver)
     }
 }
