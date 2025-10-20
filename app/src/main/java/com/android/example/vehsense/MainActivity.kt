@@ -25,6 +25,7 @@ import com.android.example.vehsense.network.BackendCommunicator
 import com.android.example.vehsense.repository.BackendRepository
 import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.ReportsScreen
+import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.theme.VehSenseTheme
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
@@ -143,7 +144,8 @@ class MainActivity : ComponentActivity() {
                             viewModel,
                             onGoToBT = { navController.navigate("btconnect") },
                             onGoToVehicles = { navController.navigate("vehicles") },
-                            onGoToReports = { navController.navigate("reports") }
+                            onGoToReports = { navController.navigate("reports") },
+                            onGoToRideScreen = { navController.navigate("ride") }
                         )
                     }
                     composable("btconnect") { backStackEntry ->
@@ -170,6 +172,22 @@ class MainActivity : ComponentActivity() {
                         VehiclesScreen(
                             userId = requireNotNull(BackendRepository.userId),
                             token = requireNotNull(BackendRepository.token)
+                        )
+                    }
+                    composable("ride") { backStackEntry ->
+                        val parentEntry = remember(backStackEntry) {
+                            navController.getBackStackEntry("dashboard")
+                        }
+                        val viewModel: DashboardBTViewModel = viewModel(parentEntry)
+
+                        RideScreen(
+                            onForceBack = {
+                                navController.navigate("dashboard") {
+                                    popUpTo("splash") { inclusive = true }
+                                }
+                            },
+                            hasPermission = viewModel.hasPermission.collectAsState(),
+                            btIsOn = viewModel.btIsOn.collectAsState()
                         )
                     }
                 }

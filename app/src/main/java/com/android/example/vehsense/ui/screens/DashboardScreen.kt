@@ -18,11 +18,11 @@ fun DashboardScreen(
     viewModel: DashboardBTViewModel,
     onGoToBT: () -> Unit,
     onGoToVehicles: () -> Unit,
-    onGoToReports: () -> Unit
+    onGoToReports: () -> Unit,
+    onGoToRideScreen: () -> Unit
 ) {
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
-    var rideIsActive by remember { mutableStateOf(false) }
 
     if (!btIsOn) {
         Text("Please enable the Bluetooth to proceed")
@@ -56,31 +56,16 @@ fun DashboardScreen(
         ) {
             Text("See your reports", style = MaterialTheme.typography.bodyLarge)
         }
-        if (!rideIsActive) {
-            Button(onClick = {
-                rideIsActive = true
-                },
-                enabled = btIsOn && socket != null && socket!!.isConnected,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Green,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color.Gray,
-                    disabledContentColor = Color.DarkGray
-                )) {
-                Text("Start The Ride!", style = MaterialTheme.typography.bodyLarge)
-            }
-        } else {
-            Button(onClick = {
-                rideIsActive = false
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                )) {
-                Text("Stop The Ride", style = MaterialTheme.typography.bodyLarge)
-            }
+        Button(
+            onClick = { onGoToRideScreen() },
+            enabled = btIsOn && socket != null && socket!!.isConnected,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Green,
+                contentColor = Color.White,
+                disabledContainerColor = Color.Gray,
+                disabledContentColor = Color.DarkGray
+            )) {
+            Text("Start The Ride!", style = MaterialTheme.typography.bodyLarge)
         }
     }
-
-
 }
