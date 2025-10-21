@@ -1,14 +1,8 @@
 package com.android.example.vehsense.ui.screens
 
-import android.app.Activity
 import android.provider.Settings
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,39 +13,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.android.example.vehsense.bluetooth.BluetoothHandler
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.ui.viewmodels.BTConnectViewModel
 
 @Composable
 fun BTConnectScreen(
+    viewModel: BTConnectViewModel = viewModel(),
     btIsOn: State<Boolean>,
-    hasPermission: State<Boolean>,
-    onConnect: (BluetoothSocket) -> Unit
+    onSelectedDevice: (BluetoothDevice) -> Unit
 ) {
     val context = LocalContext.current
-    var devices by remember { mutableStateOf(listOf<BluetoothDevice>()) }
+    val devices by viewModel.devices.collectAsState()
     var message by remember { mutableStateOf("") }
 
-    val bluetoothHandler = remember(context) {
-        BluetoothHandler(
-            context = context,
-            onMessage = { message = it },
-            onDevicesUpdated = { devices = it },
-            onFrameUpdate = { /* skipping polling for now */ }
-        )
-    }
-
     Column(modifier = Modifier.padding(16.dp)) {
-        if (!hasPermission.value) {
-            Text("Please grant BT Permissions and restart the App")
+        if (!btIsOn.value) {
+            Button(onClick = {
+                context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+            }) { Text("Enable Bluetooth") }
         } else {
-            if (!btIsOn.value) {
-                Button(onClick = {
-                    context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-                }) { Text("Enable Bluetooth") }
-            } else {
-                Button(onClick = {
-                    bluetoothHandler.startDiscovery()
-                }) { Text("Start discovery") }
+            Button(onClick = {
+                viewModel.getNearbyDevices()
+            }) {
+                Text("Start discovery")
+            }
+            if (devices.isNotEmpty()) {
                 Text("Available Devices:")
                 LazyColumn {
                     items(devices) { device ->
@@ -62,12 +48,7 @@ fun BTConnectScreen(
                             return@items
                         }
                         Button(onClick = {
-                            val socket = bluetoothHandler.getBtSocket(device)
-                            if (socket != null) {
-                                onConnect(socket)
-                            } else {
-                                // INFORM THAT THE DEVICE IS INCORRECT
-                            }
+                            onSelectedDevice(device)
                         }) {
                             Text(name)
                         }
@@ -75,8 +56,8 @@ fun BTConnectScreen(
                 }
             }
         }
-        if (message.isNotEmpty()) {
-            Text("Status: $message")
-        }
+    }
+    if (message.isNotEmpty()) {
+        Text("Status: $message")
     }
 }

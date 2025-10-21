@@ -2,21 +2,29 @@ package com.android.example.vehsense.ui.viewmodels
 
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import com.android.example.vehsense.bluetooth.BluetoothHandler
+import androidx.lifecycle.viewModelScope
+import com.android.example.vehsense.bluetooth.BluetoothScanner
+import com.android.example.vehsense.bluetooth.ELMCommander
 import com.android.example.vehsense.storage.BluetoothStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.io.IOException
+import java.util.UUID
 
 class DashboardBTViewModel(application: Application) : AndroidViewModel(application) {
+    private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
     private val storage = BluetoothStorage(getApplication<Application>())
-    private val btHandler = BluetoothHandler(context = getApplication<Application>(), onFrameUpdate = {}, onDevicesUpdated =  {}, onMessage = {} )
 
     private val _btIsOn = MutableStateFlow(false)
     val btIsOn: StateFlow<Boolean> = _btIsOn.asStateFlow()
@@ -27,17 +35,34 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
     private val _socket = MutableStateFlow<BluetoothSocket?>(null)
     val socket: StateFlow<BluetoothSocket?> = _socket.asStateFlow()
 
-    fun updateSocket(newSocket: BluetoothSocket?) { _socket.value = newSocket }
-    private fun updatePermissionState(hasPerm: Boolean) { _hasPermission.value = hasPerm }
+    fun updateSocket(bluetoothDevice: BluetoothDevice) {
+        val socket = bluetoothDevice.createRfcommSocketToServiceRecord(SPP_UUID)
+        viewModelScope.launch {
+            try {
+                socket?.connect()
+                val elmCommander = ELMCommander(socket)
+                val valid = elmCommander.isELM()
+                if (!valid) {
+                    return@launch
+                }
+
+                elmCommander.runConfig()
+            } catch (e: IOException) {
+                Log.d("SocketUpdate", "Error while connecting to a socket: ", e)
+            }
+        }
+    }
+
     fun saveDeviceAddress(address: String) { storage.saveDeviceAddress(address) }
     fun getBtSocket(): BluetoothSocket? { return _socket.value }
 
     private fun updateSocketByAddress() {
         val address = storage.getSavedDeviceAddress()
         if (address != null) {
-            val newSocket = btHandler.connectToDeviceByAddress(address)
-            if (newSocket != null) {
-                updateSocket(newSocket)
+            val btScanner = BluetoothScanner(getApplication(), onDevicesUpdated = {})
+            val device = btScanner.getDeviceByAddress(address)
+            if (device != null) {
+                updateSocket(device)
             }
         }
     }
@@ -54,7 +79,7 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
                     }
                     BluetoothAdapter.STATE_OFF -> {
                         _btIsOn.value = false
-                        updateSocket(null) }
+                        _socket.value = null }
                 }
             }
         }
@@ -63,8 +88,6 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
     init {
         val stateChangingFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         getApplication<Application>().registerReceiver(bluetoothStateReceiver, stateChangingFilter)
-
-        updatePermissionState(btHandler.hasPermissions())
 
         updateSocketByAddress()
 

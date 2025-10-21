@@ -30,6 +30,9 @@ fun RideScreen(
     if(!btIsOn.value || !hasPermission.value) {
         onForceBack()
     }
+
+    viewModel.pollData()
+
     Text("This is the ride screen", style = MaterialTheme.typography.titleLarge)
 
     Text("RPM:${obdFrame.rpm}")
@@ -37,7 +40,10 @@ fun RideScreen(
     Text("Speed:${obdFrame.vehicleSpeed}")
 
     Button(
-        onClick = { onForceBack() }
+        onClick = {
+            viewModel.stopPolling()
+            onForceBack()
+        }
     ) {
         Text("End the ride", style = MaterialTheme.typography.bodyLarge)
     }

@@ -155,10 +155,9 @@ class MainActivity : ComponentActivity() {
                         val viewModel: DashboardBTViewModel = viewModel(parentEntry)
                         BTConnectScreen(
                             btIsOn = viewModel.btIsOn.collectAsState(),
-                            hasPermission = viewModel.hasPermission.collectAsState(),
-                            onConnect = { socket ->
-                                viewModel.updateSocket(socket)
-                                viewModel.saveDeviceAddress(socket.remoteDevice.address)
+                            onSelectedDevice = { device ->
+                                viewModel.updateSocket(device)
+                                viewModel.saveDeviceAddress(device.address)
                             }
                         )
                     }
