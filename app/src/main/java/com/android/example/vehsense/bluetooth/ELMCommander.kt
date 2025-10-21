@@ -37,7 +37,6 @@ open class ELMCommander(
                 for (cfg in ObdConfig.entries) {
                     sendCommand(cfg.command)
                     delay(500)
-                    readResponse()
                 }
             } catch (e: IOException) {
                 Log.e("ELM", "Error during configuration", e)
@@ -66,9 +65,16 @@ open class ELMCommander(
         return withContext(Dispatchers.IO) {
             val sb = StringBuilder()
             try {
-                delay(50)
-                while (reader.ready()) {
-                    sb.append(reader.readLine())
+                while(true) {
+                    delay(50)
+                    if (reader.ready()) {
+                        val line = reader.readLine()
+                        if (line != "") {
+                            sb.append(line)
+                        } else {
+                            break
+                        }
+                    }
                 }
             } catch (e: IOException) {
                 Log.e("ELM", "Read error", e)
