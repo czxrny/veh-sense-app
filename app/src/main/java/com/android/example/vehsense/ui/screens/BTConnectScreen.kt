@@ -2,6 +2,7 @@ package com.android.example.vehsense.ui.screens
 
 import android.provider.Settings
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -19,12 +20,18 @@ import com.android.example.vehsense.ui.viewmodels.BTConnectViewModel
 @Composable
 fun BTConnectScreen(
     viewModel: BTConnectViewModel = viewModel(),
+    btSocketState: State<BluetoothSocket?>,
     btIsOn: State<Boolean>,
-    onSelectedDevice: (BluetoothDevice) -> Unit
+    onSelectedDevice: (BluetoothDevice) -> Unit,
+    onConnectedDevice: () -> Unit
 ) {
     val context = LocalContext.current
     val devices by viewModel.devices.collectAsState()
     var message by remember { mutableStateOf("") }
+
+    if (btSocketState.value != null && btSocketState.value!!.isConnected) {
+        onConnectedDevice()
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         if (!btIsOn.value) {

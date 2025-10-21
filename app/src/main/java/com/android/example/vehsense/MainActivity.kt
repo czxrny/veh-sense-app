@@ -154,10 +154,16 @@ class MainActivity : ComponentActivity() {
                         }
                         val viewModel: DashboardBTViewModel = viewModel(parentEntry)
                         BTConnectScreen(
+                            btSocketState = viewModel.socket.collectAsState(),
                             btIsOn = viewModel.btIsOn.collectAsState(),
                             onSelectedDevice = { device ->
                                 viewModel.updateSocket(device)
-                                viewModel.saveDeviceAddress(device.address)
+                            },
+                            onConnectedDevice = {
+                                viewModel.saveDeviceAddress(viewModel.socket.value!!.remoteDevice.address)
+                                navController.navigate("dashboard") {
+                                    popUpTo("btconnect") { inclusive = true }
+                                }
                             }
                         )
                     }
@@ -188,7 +194,6 @@ class MainActivity : ComponentActivity() {
                                     popUpTo("ride") { inclusive = true }
                                 }
                             },
-                            hasPermission = viewModel.hasPermission.collectAsState(),
                             btIsOn = viewModel.btIsOn.collectAsState()
                         )
                     }
