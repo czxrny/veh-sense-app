@@ -12,7 +12,7 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
 open class ELMCommander(
-    private val socket: BluetoothSocket,
+    socket: BluetoothSocket,
 ) {
     private var reader: BufferedReader = BufferedReader(InputStreamReader(socket.inputStream))
     private var writer: BufferedWriter = BufferedWriter(OutputStreamWriter(socket.outputStream))
@@ -22,7 +22,8 @@ open class ELMCommander(
         return withContext(Dispatchers.IO) {
             try {
                 sendCommand("ATI")
-                val response = readResponse()
+                val response = readResponseUntilEmpty()
+                Log.d("ELM", response)
                 return@withContext response.contains("ELM", ignoreCase = true)
             } catch (e: IOException) {
                 Log.e("ELM", "Error checking ELM327", e)
@@ -37,6 +38,8 @@ open class ELMCommander(
                 for (cfg in ObdConfig.entries) {
                     sendCommand(cfg.command)
                     delay(500)
+                    val response = readResponseUntilEmpty()
+                    Log.d("ELM", response)
                 }
             } catch (e: IOException) {
                 Log.e("ELM", "Error during configuration", e)
@@ -60,8 +63,9 @@ open class ELMCommander(
         }
     }
 
+    // Reading the buffer until the stream is empty
     @Throws(IOException::class)
-    protected suspend fun readResponse(): String {
+    protected suspend fun readResponseUntilEmpty(): String {
         return withContext(Dispatchers.IO) {
             val sb = StringBuilder()
             try {
@@ -69,8 +73,9 @@ open class ELMCommander(
                     delay(50)
                     if (reader.ready()) {
                         val line = reader.readLine()
-                        if (line != "") {
+                        if (line != "" && line != ">") {
                             sb.append(line)
+                            if (line.contains(">")) break
                         } else {
                             break
                         }
@@ -80,7 +85,30 @@ open class ELMCommander(
                 Log.e("ELM", "Read error", e)
                 throw e
             }
-            return@withContext sb.toString()
+            return@withContext sb.toString().trim().removeSuffix(">")
         }
     }
+
+    @Throws(IOException::class)
+    suspend fun readResponse(): String = withContext(Dispatchers.IO) {
+        val sb = StringBuilder()
+        try {
+            while(true) {
+                if (reader.ready()) {
+                    val line = reader.readLine()
+                    if (line != null) {
+                        sb.append(line)
+                        if (line.contains(">")) break
+                    }
+                } else {
+                    delay(50)
+                }
+            }
+        } catch(e: IOException) {
+            Log.e("ELM", "Read error", e)
+            throw e
+        }
+        return@withContext sb.toString().trim().removeSuffix(">")
+    }
+
 }

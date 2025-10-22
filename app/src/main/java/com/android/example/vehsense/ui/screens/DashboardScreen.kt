@@ -3,6 +3,7 @@ package com.android.example.vehsense.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,11 +12,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardBTViewModel,
+    viewModel: DashboardBTViewModel = viewModel(),
     onGoToBT: () -> Unit,
     onGoToVehicles: () -> Unit,
     onGoToReports: () -> Unit,
@@ -23,6 +27,9 @@ fun DashboardScreen(
 ) {
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
+    val isConnected by viewModel.isConnected.collectAsState()
+    val elmMessageSuffix = "Connection state:"
+    var elmMessage by remember { mutableStateOf("") }
 
     if (!btIsOn) {
         Text("Please enable the Bluetooth to proceed")
@@ -56,6 +63,16 @@ fun DashboardScreen(
         ) {
             Text("See your reports", style = MaterialTheme.typography.bodyLarge)
         }
+
+        elmMessage = when(isConnected) {
+            true -> "$elmMessageSuffix OK"
+            false -> "$elmMessageSuffix NOT CONNECTED"
+            null -> "$elmMessageSuffix CONNECTING..."
+        }
+
+        Text("Bluetooth State: $btIsOn")
+        Text(elmMessage)
+
         Button(
             onClick = { onGoToRideScreen() },
             enabled = btIsOn && socket != null && socket!!.isConnected,
@@ -66,6 +83,11 @@ fun DashboardScreen(
                 disabledContentColor = Color.DarkGray
             )) {
             Text("Start The Ride!", style = MaterialTheme.typography.bodyLarge)
+        }
+
+        LaunchedEffect(Unit) {
+            awaitFrame()
+            viewModel.updateSocketByAddress()
         }
     }
 }

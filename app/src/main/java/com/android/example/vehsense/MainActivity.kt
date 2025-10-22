@@ -139,9 +139,7 @@ class MainActivity : ComponentActivity() {
                             throw IllegalArgumentException("DashboardScreen requires Backend Repository to be initialized")
                         }
 
-                        val viewModel: DashboardBTViewModel = viewModel()
                         DashboardScreen(
-                            viewModel,
                             onGoToBT = { navController.navigate("btconnect") },
                             onGoToVehicles = { navController.navigate("vehicles") },
                             onGoToReports = { navController.navigate("reports") },

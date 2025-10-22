@@ -10,7 +10,6 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
     LaunchedEffect(Unit) {
-        delay(2000)
         onFinished()
     }
     Box(
