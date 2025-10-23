@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.UUID
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -38,7 +39,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isConnected = MutableStateFlow<Boolean?>(false)
     val isConnected: StateFlow<Boolean?> = _isConnected.asStateFlow()
 
-    fun updateSocket(bluetoothDevice: BluetoothDevice) {
+    fun disconnectFromDevice() {
+        val socket = _socket.value
+        try {
+            socket?.close()
+        } catch (e: IOException) {
+            Log.d("AppBTSocket", "Error while closing socket: ${e.message}")
+        } finally {
+            Log.d("AppBTSocket", "Disconnected from device")
+            _socket.value = null
+            _isConnected.value = false
+        }
+    }
+
+    fun connectToDevice(bluetoothDevice: BluetoothDevice) {
         viewModelScope.launch {
             _isConnected.value = null
 
@@ -75,7 +89,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         BluetoothStorage.saveDeviceInfo(deviceInfo)
     }
 
-    fun updateSocketByAddress() {
+    fun connectToSavedDevice() {
         val deviceInfo = BluetoothStorage.getSavedDeviceInfo()
         Log.d("SocketUpdate", "Connecting to socket by address")
         if (deviceInfo != null) {
@@ -85,7 +99,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val btScanner = BluetoothScanner(getApplication(), onDevicesUpdated = {})
             val device = btScanner.getDeviceByAddress(deviceInfo.address)
             if (device != null) {
-                updateSocket(device)
+                connectToDevice(device)
             }
         } else {
             _isConnected.value = false
@@ -101,7 +115,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 when (state) {
                     BluetoothAdapter.STATE_ON -> {
                         _btIsOn.value = true
-                        updateSocketByAddress()
+                        connectToSavedDevice()
                     }
                     BluetoothAdapter.STATE_OFF -> {
                         _btIsOn.value = false

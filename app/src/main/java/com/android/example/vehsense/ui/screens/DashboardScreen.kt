@@ -72,15 +72,26 @@ fun DashboardScreen(
 
         if (isConnected != null && isConnected == false && deviceInfo != null) {
             Button(
-                onClick = { viewModel.updateSocketByAddress() },
+                onClick = { viewModel.connectToSavedDevice() },
                 enabled = btIsOn,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2196F3),
+                    containerColor = Color.Blue,
                     contentColor = Color.White
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Connect to the OBD-II")
+            }
+        } else if (isConnected == true) {
+            Button(
+                onClick = { viewModel.disconnectFromDevice() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Disconnect from device")
             }
         }
 
