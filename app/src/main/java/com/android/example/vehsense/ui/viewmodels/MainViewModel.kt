@@ -35,9 +35,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _deviceInfo = MutableStateFlow<DeviceInfo?>(null)
     val deviceInfo: StateFlow<DeviceInfo?> = _deviceInfo.asStateFlow()
 
-    private var currentDeviceInfo: DeviceInfo? = null
-
-    private val _isConnected = MutableStateFlow<Boolean?>(null)
+    private val _isConnected = MutableStateFlow<Boolean?>(false)
     val isConnected: StateFlow<Boolean?> = _isConnected.asStateFlow()
 
     fun updateSocket(bluetoothDevice: BluetoothDevice) {
@@ -76,8 +74,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _deviceInfo.value = deviceInfo
         BluetoothStorage.saveDeviceInfo(deviceInfo)
     }
-
-    fun getBtSocket(): BluetoothSocket? { return _socket.value }
 
     fun updateSocketByAddress() {
         val deviceInfo = BluetoothStorage.getSavedDeviceInfo()

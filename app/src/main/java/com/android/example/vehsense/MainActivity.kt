@@ -3,9 +3,9 @@ package com.android.example.vehsense
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import  com.android.example.vehsense.ui.screens.SplashScreen
-import  com.android.example.vehsense.ui.screens.DashboardScreen
-import  com.android.example.vehsense.ui.screens.BTConnectScreen
+import com.android.example.vehsense.ui.screens.SplashScreen
+import com.android.example.vehsense.ui.screens.DashboardScreen
+import com.android.example.vehsense.ui.screens.BTConnectScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle

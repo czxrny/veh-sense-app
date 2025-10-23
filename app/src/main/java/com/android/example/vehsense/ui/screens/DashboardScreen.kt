@@ -31,14 +31,6 @@ fun DashboardScreen(
     val elmMessageSuffix = "Connection state:"
     var elmMessage by remember { mutableStateOf("") }
 
-    if (!btIsOn) {
-        Text("Please enable the Bluetooth to proceed")
-    }
-
-    LaunchedEffect(deviceInfo) {
-        viewModel.updateSocketByAddress()
-    }
-
     Column(
         modifier = Modifier
             .padding(24.dp)
@@ -76,6 +68,21 @@ fun DashboardScreen(
 
         Text("Bluetooth State: $btIsOn")
         Text(elmMessage)
+        Spacer(Modifier.height(8.dp))
+
+        if (isConnected != null && isConnected == false && deviceInfo != null) {
+            Button(
+                onClick = { viewModel.updateSocketByAddress() },
+                enabled = btIsOn,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Connect to the OBD-II")
+            }
+        }
 
         Button(
             onClick = { onGoToRideScreen() },
