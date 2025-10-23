@@ -11,7 +11,6 @@ import android.content.IntentFilter
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.example.vehsense.bluetooth.BluetoothScanner
 import com.android.example.vehsense.bluetooth.ELMCommander
 import com.android.example.vehsense.model.DeviceInfo
 import com.android.example.vehsense.storage.BluetoothStorage
@@ -97,8 +96,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _deviceInfo.value = deviceInfo
             Log.d("VehsenseBTSocket", "Address: ${deviceInfo.address}")
             Log.d("VehsenseBTSocket", "Name: ${deviceInfo.name}")
-            val btScanner = BluetoothScanner(getApplication(), onDevicesUpdated = {})
-            val device = btScanner.getDeviceByAddress(deviceInfo.address)
+            val btAdapter = BluetoothAdapter.getDefaultAdapter()
+            val device = btAdapter.getRemoteDevice(deviceInfo.address)
             if (device != null) {
                 connectToDevice(device)
             }
