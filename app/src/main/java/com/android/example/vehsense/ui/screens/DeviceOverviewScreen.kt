@@ -11,8 +11,8 @@ import androidx.compose.ui.unit.sp
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
-fun BTOverviewScreen(
-    onGoToConnectScreen: () -> Unit
+fun DeviceOverviewScreen(
+    onGoToDiscoveryScreen: () -> Unit
 ) {
     val viewModel = getMainViewModel()
     val deviceInfo by viewModel.deviceInfo.collectAsState()
@@ -27,7 +27,7 @@ fun BTOverviewScreen(
             Text("Select new device OBD-II ELM327 device to proceed", fontSize = 16.sp)
         }
         Button(onClick = {
-            onGoToConnectScreen()
+            onGoToDiscoveryScreen()
         }) {
             Text("Select new device")
         }
