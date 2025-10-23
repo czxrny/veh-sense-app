@@ -12,14 +12,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -32,7 +27,6 @@ import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.theme.VehSenseTheme
-import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {

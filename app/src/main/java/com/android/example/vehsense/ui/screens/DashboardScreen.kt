@@ -1,6 +1,5 @@
 package com.android.example.vehsense.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -13,11 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
-import kotlinx.coroutines.android.awaitFrame
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun DashboardScreen(

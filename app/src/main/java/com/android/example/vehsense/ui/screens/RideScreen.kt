@@ -1,6 +1,5 @@
 package com.android.example.vehsense.ui.screens
 
-import android.bluetooth.BluetoothSocket
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,13 +9,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
+import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
@@ -27,7 +25,7 @@ fun RideScreen(
     token: String,
     onForceBack: () -> Unit,
     ) {
-    val mainViewModel: DashboardBTViewModel = getMainViewModel()
+    val mainViewModel: MainViewModel = getMainViewModel()
     val btIsOn by mainViewModel.btIsOn.collectAsState()
 
     val viewModel = viewModel<RideViewModel>(
