@@ -70,17 +70,19 @@ fun DashboardScreen(
         Text(elmMessage)
         Spacer(Modifier.height(8.dp))
 
-        if (isConnected != null && isConnected == false && deviceInfo != null) {
+        if (isConnected == null || isConnected == false) {
             Button(
                 onClick = { viewModel.connectToSavedDevice() },
-                enabled = btIsOn,
+                enabled = btIsOn && deviceInfo != null && isConnected != null,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Blue,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Gray,
+                    disabledContentColor = Color.LightGray
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Connect to the OBD-II")
+                Text("Connect to the OBD-II", style = MaterialTheme.typography.bodyLarge)
             }
         } else if (isConnected == true) {
             Button(
@@ -91,7 +93,7 @@ fun DashboardScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Disconnect from device")
+                Text("Disconnect from device", style = MaterialTheme.typography.bodyLarge)
             }
         }
 
