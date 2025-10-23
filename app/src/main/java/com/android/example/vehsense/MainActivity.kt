@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.android.example.vehsense.ui.screens.SplashScreen
 import com.android.example.vehsense.ui.screens.DashboardScreen
-import com.android.example.vehsense.ui.screens.BTConnectScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
@@ -23,6 +22,7 @@ import com.android.example.vehsense.repository.BackendRepository
 import com.android.example.vehsense.storage.BluetoothStorage
 import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.BTOverviewScreen
+import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
@@ -148,12 +148,12 @@ class MainActivity : ComponentActivity() {
                     composable("btOverview") {
                         BTOverviewScreen(
                             onGoToConnectScreen = {
-                                navController.navigate("btConnect")
+                                navController.navigate("deviceDiscovery")
                             },
                         )
                     }
-                    composable("btConnect") {
-                        BTConnectScreen(
+                    composable("deviceDiscovery") {
+                        DeviceDiscoveryScreen(
                             onSelectedDevice = {
                                 navController.popBackStack()
                            },

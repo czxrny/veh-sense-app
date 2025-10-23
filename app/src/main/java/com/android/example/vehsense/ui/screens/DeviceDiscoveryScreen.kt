@@ -1,8 +1,6 @@
 package com.android.example.vehsense.ui.screens
 
 import android.provider.Settings
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -16,26 +14,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.example.vehsense.model.DeviceInfo
-import com.android.example.vehsense.ui.viewmodels.BTConnectViewModel
+import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
-fun BTConnectScreen(
-    btConnectViewModel: BTConnectViewModel = viewModel(),
+fun DeviceDiscoveryScreen(
+    deviceDiscoveryViewModel: DeviceDiscoveryViewModel = viewModel(),
     onSelectedDevice: () -> Unit,
 ) {
     val mainViewModel = getMainViewModel()
     val btIsOn by mainViewModel.btIsOn.collectAsState()
 
-    val devices by btConnectViewModel.devices.collectAsState()
+    val devices by deviceDiscoveryViewModel.devices.collectAsState()
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     LaunchedEffect(btIsOn) {
-        if (btIsOn) btConnectViewModel.startDiscovery()
+        if (btIsOn) deviceDiscoveryViewModel.startDiscovery()
     }
     DisposableEffect(Unit) {
-        onDispose { btConnectViewModel.stopDiscovery() }
+        onDispose { deviceDiscoveryViewModel.stopDiscovery() }
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -55,7 +53,7 @@ fun BTConnectScreen(
                             return@items
                         }
                         Button(onClick = {
-                            btConnectViewModel.stopDiscovery()
+                            deviceDiscoveryViewModel.stopDiscovery()
                             mainViewModel.updateDeviceInfo(DeviceInfo(device.name, device.address))
                             onSelectedDevice()
                         }) {
