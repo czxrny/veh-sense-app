@@ -49,13 +49,10 @@ class BluetoothScanner(
     @Suppress("MissingPermission")
     fun stopDiscovery() {
         bluetoothAdapter?.cancelDiscovery()
+        try { context.unregisterReceiver(receiver) } catch (_: Exception) {}
     }
 
     fun getDeviceByAddress(macAddress: String): BluetoothDevice? {
         return bluetoothAdapter?.getRemoteDevice(macAddress)
-    }
-
-    fun cleanup() {
-        try { context.unregisterReceiver(receiver) } catch (_: Exception) {}
     }
 }

@@ -155,9 +155,7 @@ class MainActivity : ComponentActivity() {
                     composable("btConnect") {
                         BTConnectScreen(
                             onSelectedDevice = {
-                                navController.navigate("btOverview") {
-                                    popUpTo("ride") { inclusive = true }
-                                }
+                                navController.popBackStack()
                            },
                         )
                     }

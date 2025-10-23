@@ -22,9 +22,13 @@ class BTConnectViewModel(application: Application) : AndroidViewModel(applicatio
         onDevicesUpdated = { _devices.value = it }
     )
 
-    fun getNearbyDevices() {
+    fun startDiscovery() {
         viewModelScope.launch {
             btScanner.startDiscovery()
         }
+    }
+
+    fun stopDiscovery() {
+        btScanner.stopDiscovery()
     }
 }

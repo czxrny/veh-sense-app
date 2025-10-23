@@ -21,15 +21,22 @@ import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun BTConnectScreen(
-    viewModel: BTConnectViewModel = viewModel(),
-    onSelectedDevice: (BluetoothDevice) -> Unit,
+    btConnectViewModel: BTConnectViewModel = viewModel(),
+    onSelectedDevice: () -> Unit,
 ) {
     val mainViewModel = getMainViewModel()
     val btIsOn by mainViewModel.btIsOn.collectAsState()
 
-    val devices by viewModel.devices.collectAsState()
+    val devices by btConnectViewModel.devices.collectAsState()
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    LaunchedEffect(btIsOn) {
+        if (btIsOn) btConnectViewModel.startDiscovery()
+    }
+    DisposableEffect(Unit) {
+        onDispose { btConnectViewModel.stopDiscovery() }
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         if (!btIsOn) {
@@ -37,13 +44,8 @@ fun BTConnectScreen(
                 context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
             }) { Text("Enable Bluetooth") }
         } else {
-            Button(onClick = {
-                viewModel.getNearbyDevices()
-            }) {
-                Text("Start discovery")
-            }
+            Text("Available Devices:")
             if (devices.isNotEmpty()) {
-                Text("Available Devices:")
                 LazyColumn {
                     items(devices) { device ->
                         val name = try {
@@ -53,8 +55,9 @@ fun BTConnectScreen(
                             return@items
                         }
                         Button(onClick = {
+                            btConnectViewModel.stopDiscovery()
                             mainViewModel.updateDeviceInfo(DeviceInfo(device.name, device.address))
-                            onSelectedDevice(device)
+                            onSelectedDevice()
                         }) {
                             Text(name)
                         }
