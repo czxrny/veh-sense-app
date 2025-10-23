@@ -1,8 +1,9 @@
-package com.android.example.vehsense.ui.viewmodels
+package com.android.example.vehsense.ui.viewmodels.utils
 
 import android.bluetooth.BluetoothSocket
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.android.example.vehsense.ui.viewmodels.RideViewModel
 
 class RideViewModelFactory(
     private val userId: Int,

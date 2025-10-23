@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
-import com.android.example.vehsense.ui.viewmodels.RideViewModelFactory
+import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable

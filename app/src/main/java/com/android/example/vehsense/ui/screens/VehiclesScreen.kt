@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.ui.viewmodels.SharedBackendViewModelFactory
+import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 
 @Composable

@@ -1,7 +1,8 @@
-package com.android.example.vehsense.ui.viewmodels
+package com.android.example.vehsense.ui.viewmodels.utils
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 
 class SharedBackendViewModelFactory(
     private val userId: Int,
