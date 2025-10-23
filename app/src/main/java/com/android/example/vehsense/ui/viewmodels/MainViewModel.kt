@@ -44,9 +44,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             socket?.close()
         } catch (e: IOException) {
-            Log.d("AppBTSocket", "Error while closing socket: ${e.message}")
+            Log.d("VehsenseBTSocket", "Error while closing socket: ${e.message}")
         } finally {
-            Log.d("AppBTSocket", "Disconnected from device")
+            Log.d("VehsenseBTSocket", "Disconnected from device")
             _socket.value = null
             _isConnected.value = false
         }
@@ -76,9 +76,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 _isConnected.value = true
-                Log.d("SocketUpdate", "Connected to ${bluetoothDevice.name}")
+                Log.d("VehsenseBTSocket", "Connected to ${bluetoothDevice.name}")
             } catch (e: Exception) {
-                Log.d("SocketUpdate", "Error while connecting to a socket: ", e)
+                Log.d("VehsenseBTSocket", "Error while connecting to a socket: ", e)
+                _socket.value = null
                 _isConnected.value = false
             }
         }
@@ -91,11 +92,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun connectToSavedDevice() {
         val deviceInfo = BluetoothStorage.getSavedDeviceInfo()
-        Log.d("SocketUpdate", "Connecting to socket by address")
+        Log.d("VehsenseBTSocket", "Connecting to socket by address")
         if (deviceInfo != null) {
             _deviceInfo.value = deviceInfo
-            Log.d("SocketUpdate", "Address: ${deviceInfo.address}")
-            Log.d("SocketUpdate", "Name: ${deviceInfo.name}")
+            Log.d("VehsenseBTSocket", "Address: ${deviceInfo.address}")
+            Log.d("VehsenseBTSocket", "Name: ${deviceInfo.name}")
             val btScanner = BluetoothScanner(getApplication(), onDevicesUpdated = {})
             val device = btScanner.getDeviceByAddress(deviceInfo.address)
             if (device != null) {
@@ -103,7 +104,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             _isConnected.value = false
-            Log.d("SocketUpdate", "No bluetooth device saved in storage")
+            Log.d("VehsenseBTSocket", "No bluetooth device saved in storage")
         }
     }
 
@@ -130,6 +131,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val stateChangingFilter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         getApplication<Application>().registerReceiver(bluetoothStateReceiver, stateChangingFilter)
+
+        _deviceInfo.value = BluetoothStorage.getSavedDeviceInfo()
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         _btIsOn.value = bluetoothAdapter?.isEnabled == true
