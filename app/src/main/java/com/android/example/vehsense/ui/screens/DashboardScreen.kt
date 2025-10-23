@@ -1,5 +1,6 @@
 package com.android.example.vehsense.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,25 +15,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
+import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardBTViewModel = viewModel(),
     onGoToBT: () -> Unit,
     onGoToVehicles: () -> Unit,
     onGoToReports: () -> Unit,
     onGoToRideScreen: () -> Unit
 ) {
+    val viewModel = getMainViewModel()
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
+
+    val deviceInfo by viewModel.deviceInfo.collectAsState()
+
     val elmMessageSuffix = "Connection state:"
     var elmMessage by remember { mutableStateOf("") }
 
     if (!btIsOn) {
         Text("Please enable the Bluetooth to proceed")
+    }
+
+    LaunchedEffect(deviceInfo) {
+        viewModel.updateSocketByAddress()
     }
 
     Column(
@@ -44,7 +53,7 @@ fun DashboardScreen(
         Text("Dashboard", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(32.dp))
         Button(
-            onClick = onGoToBT,
+            onClick = { onGoToBT() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Select Your BT Device", style = MaterialTheme.typography.bodyLarge)
@@ -83,11 +92,6 @@ fun DashboardScreen(
                 disabledContentColor = Color.DarkGray
             )) {
             Text("Start The Ride!", style = MaterialTheme.typography.bodyLarge)
-        }
-
-        LaunchedEffect(Unit) {
-            awaitFrame()
-            viewModel.updateSocketByAddress()
         }
     }
 }

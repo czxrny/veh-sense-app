@@ -16,24 +16,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.ui.viewmodels.DashboardBTViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModelFactory
+import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun RideScreen(
     userId: Int,
     token: String,
-    btSocket: BluetoothSocket,
     onForceBack: () -> Unit,
-    btIsOn: State<Boolean>,
     ) {
+    val mainViewModel: DashboardBTViewModel = getMainViewModel()
+    val btIsOn by mainViewModel.btIsOn.collectAsState()
 
     val viewModel = viewModel<RideViewModel>(
-        factory = RideViewModelFactory(userId, token, btSocket)
+        factory = RideViewModelFactory(userId, token, requireNotNull(mainViewModel.socket.value))
     )
     val obdFrame by viewModel.obdFrame.collectAsState()
 
-    if(!btIsOn.value) {
+
+    if(!btIsOn) {
         onForceBack()
     }
 

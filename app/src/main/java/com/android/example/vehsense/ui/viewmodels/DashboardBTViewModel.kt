@@ -13,6 +13,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.example.vehsense.bluetooth.BluetoothScanner
 import com.android.example.vehsense.bluetooth.ELMCommander
+import com.android.example.vehsense.model.DeviceInfo
 import com.android.example.vehsense.storage.BluetoothStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,13 +27,16 @@ import java.util.UUID
 class DashboardBTViewModel(application: Application) : AndroidViewModel(application) {
     private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
-    private val storage = BluetoothStorage(getApplication<Application>())
-
     private val _btIsOn = MutableStateFlow(false)
     val btIsOn: StateFlow<Boolean> = _btIsOn.asStateFlow()
 
     private val _socket = MutableStateFlow<BluetoothSocket?>(null)
     val socket: StateFlow<BluetoothSocket?> = _socket.asStateFlow()
+
+    private val _deviceInfo = MutableStateFlow<DeviceInfo?>(null)
+    val deviceInfo: StateFlow<DeviceInfo?> = _deviceInfo.asStateFlow()
+
+    private var currentDeviceInfo: DeviceInfo? = null
 
     private val _isConnected = MutableStateFlow<Boolean?>(null)
     val isConnected: StateFlow<Boolean?> = _isConnected.asStateFlow()
@@ -69,23 +73,28 @@ class DashboardBTViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun updateDeviceInfo(deviceInfo: DeviceInfo) {
+        _deviceInfo.value = deviceInfo
+        BluetoothStorage.saveDeviceInfo(deviceInfo)
+    }
 
-    fun saveDeviceAddress(address: String) { storage.saveDeviceAddress(address) }
     fun getBtSocket(): BluetoothSocket? { return _socket.value }
 
     fun updateSocketByAddress() {
-        val address = storage.getSavedDeviceAddress()
+        val deviceInfo = BluetoothStorage.getSavedDeviceInfo()
         Log.d("SocketUpdate", "Connecting to socket by address")
-        if (address != null) {
-            Log.d("SocketUpdate", "Address: $address")
+        if (deviceInfo != null) {
+            _deviceInfo.value = deviceInfo
+            Log.d("SocketUpdate", "Address: ${deviceInfo.address}")
+            Log.d("SocketUpdate", "Name: ${deviceInfo.name}")
             val btScanner = BluetoothScanner(getApplication(), onDevicesUpdated = {})
-            val device = btScanner.getDeviceByAddress(address)
+            val device = btScanner.getDeviceByAddress(deviceInfo.address)
             if (device != null) {
-                Log.d("SocketUpdate", "Name: ${device.name}")
                 updateSocket(device)
             }
         } else {
             _isConnected.value = false
+            Log.d("SocketUpdate", "No bluetooth device saved in storage")
         }
     }
 

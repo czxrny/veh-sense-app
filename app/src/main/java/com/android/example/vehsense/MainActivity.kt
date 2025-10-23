@@ -12,9 +12,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -23,7 +25,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.example.vehsense.network.BackendCommunicator
 import com.android.example.vehsense.repository.BackendRepository
+import com.android.example.vehsense.storage.BluetoothStorage
 import com.android.example.vehsense.storage.UserStorage
+import com.android.example.vehsense.ui.screens.BTOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
@@ -56,6 +60,7 @@ class MainActivity : ComponentActivity() {
         }
 
         UserStorage.init(applicationContext)
+        BluetoothStorage.init(applicationContext)
 
         setContent {
             VehSenseTheme {
@@ -140,29 +145,26 @@ class MainActivity : ComponentActivity() {
                         }
 
                         DashboardScreen(
-                            onGoToBT = { navController.navigate("btconnect") },
+                            onGoToBT = { navController.navigate("btOverview") },
                             onGoToVehicles = { navController.navigate("vehicles") },
                             onGoToReports = { navController.navigate("reports") },
                             onGoToRideScreen = { navController.navigate("ride") }
                         )
                     }
-                    composable("btconnect") { backStackEntry ->
-                        val parentEntry = remember(backStackEntry) {
-                            navController.getBackStackEntry("dashboard")
-                        }
-                        val viewModel: DashboardBTViewModel = viewModel(parentEntry)
-                        BTConnectScreen(
-                            btSocketState = viewModel.socket.collectAsState(),
-                            btIsOn = viewModel.btIsOn.collectAsState(),
-                            onSelectedDevice = { device ->
-                                viewModel.updateSocket(device)
+                    composable("btOverview") {
+                        BTOverviewScreen(
+                            onGoToConnectScreen = {
+                                navController.navigate("btConnect")
                             },
-                            onConnectedDevice = {
-                                viewModel.saveDeviceAddress(viewModel.socket.value!!.remoteDevice.address)
-                                navController.navigate("dashboard") {
-                                    popUpTo("btconnect") { inclusive = true }
+                        )
+                    }
+                    composable("btConnect") {
+                        BTConnectScreen(
+                            onSelectedDevice = {
+                                navController.navigate("btOverview") {
+                                    popUpTo("ride") { inclusive = true }
                                 }
-                            }
+                           },
                         )
                     }
                     composable("reports") {
@@ -177,22 +179,15 @@ class MainActivity : ComponentActivity() {
                             token = requireNotNull(BackendRepository.token)
                         )
                     }
-                    composable("ride") { backStackEntry ->
-                        val parentEntry = remember(backStackEntry) {
-                            navController.getBackStackEntry("dashboard")
-                        }
-                        val viewModel: DashboardBTViewModel = viewModel(parentEntry)
-
+                    composable("ride") {
                         RideScreen(
                             userId = requireNotNull(BackendRepository.userId),
                             token = requireNotNull(BackendRepository.token),
-                            btSocket = requireNotNull(viewModel.getBtSocket()),
                             onForceBack = {
                                 navController.navigate("dashboard") {
                                     popUpTo("ride") { inclusive = true }
                                 }
                             },
-                            btIsOn = viewModel.btIsOn.collectAsState()
                         )
                     }
                 }

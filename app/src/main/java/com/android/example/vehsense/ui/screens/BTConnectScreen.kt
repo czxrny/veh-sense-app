@@ -15,26 +15,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.model.DeviceInfo
 import com.android.example.vehsense.ui.viewmodels.BTConnectViewModel
+import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun BTConnectScreen(
     viewModel: BTConnectViewModel = viewModel(),
-    btSocketState: State<BluetoothSocket?>,
-    btIsOn: State<Boolean>,
     onSelectedDevice: (BluetoothDevice) -> Unit,
-    onConnectedDevice: () -> Unit
 ) {
-    val context = LocalContext.current
+    val mainViewModel = getMainViewModel()
+    val btIsOn by mainViewModel.btIsOn.collectAsState()
+
     val devices by viewModel.devices.collectAsState()
     var message by remember { mutableStateOf("") }
-
-    if (btSocketState.value != null && btSocketState.value!!.isConnected) {
-        onConnectedDevice()
-    }
+    val context = LocalContext.current
 
     Column(modifier = Modifier.padding(16.dp)) {
-        if (!btIsOn.value) {
+        if (!btIsOn) {
             Button(onClick = {
                 context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
             }) { Text("Enable Bluetooth") }
@@ -55,6 +53,7 @@ fun BTConnectScreen(
                             return@items
                         }
                         Button(onClick = {
+                            mainViewModel.updateDeviceInfo(DeviceInfo(device.name, device.address))
                             onSelectedDevice(device)
                         }) {
                             Text(name)
