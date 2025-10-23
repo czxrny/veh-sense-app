@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.example.vehsense.model.DeviceInfo
 import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
@@ -47,18 +49,22 @@ fun DeviceDiscoveryScreen(
                 LazyColumn {
                     items(devices) { device ->
                         val name = try {
-                            device.name ?: "Unknown Device"
+                            device.name ?: "Unknown device"
                         } catch (e: SecurityException) {
                             Log.d("SecurityEx", "as")
                             return@items
                         }
                         Button(onClick = {
                             deviceDiscoveryViewModel.stopDiscovery()
-                            mainViewModel.updateDeviceInfo(DeviceInfo(device.name, device.address))
+                            mainViewModel.updateDeviceInfo(DeviceInfo(name, device.address))
                             onSelectedDevice()
                         }) {
-                            Text(name)
+                            Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                                Text(text = name)
+                                Text(text = device.address, fontSize = 10.sp)
+                            }
                         }
+                        Spacer(Modifier.height(2.dp))
                     }
                 }
             }
