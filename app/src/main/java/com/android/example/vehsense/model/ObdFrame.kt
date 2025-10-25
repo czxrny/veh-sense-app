@@ -1,8 +1,5 @@
 package com.android.example.vehsense.model
 
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
-
 data class ObdFrame(
     var rpm: Int = 0,
     var engineLoad: Int = 0,

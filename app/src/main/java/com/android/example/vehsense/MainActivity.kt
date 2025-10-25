@@ -25,6 +25,7 @@ import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
+import com.android.example.vehsense.ui.screens.VehicleAddScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.theme.VehSenseTheme
 import kotlinx.coroutines.launch
@@ -168,7 +169,19 @@ class MainActivity : ComponentActivity() {
                     composable("vehicles") {
                         VehiclesScreen(
                             userId = requireNotNull(BackendRepository.userId),
-                            token = requireNotNull(BackendRepository.token)
+                            token = requireNotNull(BackendRepository.token),
+                            onGoToAddScreen = {
+                                navController.navigate("vehicleAddScreen")
+                            }
+                        )
+                    }
+                    composable("vehicleAddScreen") {
+                        VehicleAddScreen(
+                            userId = requireNotNull(BackendRepository.userId),
+                            token = requireNotNull(BackendRepository.token),
+                            onFinished = {
+                                navController.popBackStack()
+                            }
                         )
                     }
                     composable("ride") {

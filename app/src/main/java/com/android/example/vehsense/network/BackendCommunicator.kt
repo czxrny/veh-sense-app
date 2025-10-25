@@ -4,6 +4,7 @@ import android.util.Log
 import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.model.Vehicle
+import com.android.example.vehsense.model.VehicleAddRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -150,7 +151,8 @@ class BackendCommunicator {
                         ?: return@withContext Result.failure(Exception("Empty response body"))
 
                     val parsed: List<Vehicle> = try {
-                        val listType = object : com.google.gson.reflect.TypeToken<List<Vehicle>>() {}.type
+                        val listType =
+                            object : com.google.gson.reflect.TypeToken<List<Vehicle>>() {}.type
                         Gson().fromJson(bodyString, listType)
                     } catch (e: Exception) {
                         return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
@@ -158,6 +160,64 @@ class BackendCommunicator {
 
                     Result.success(parsed)
 
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun addVehicle(vehicleAddRequest: VehicleAddRequest, token: String): Result<Vehicle> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val json = Gson().toJson(vehicleAddRequest)
+
+                val body = json.toString()
+                    .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+                val request = Request.Builder()
+                    .url("${baseUrl}/vehicles")
+                    .addHeader("Authorization", "Bearer $token")
+                    .post(body)
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Signup error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed = try {
+                        Gson().fromJson(bodyString, Vehicle::class.java)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun deleteVehicle(vehicleId: Int, token: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${baseUrl}/vehicles/$vehicleId")
+                    .addHeader("Authorization", "Bearer $token")
+                    .delete()
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Delete error: ${response.code}"))
+                    }
+
+                    Result.success(Unit)
                 }
             } catch (e: Exception) {
                 Result.failure(e)

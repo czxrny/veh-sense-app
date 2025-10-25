@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.network.BackendCommunicator
+import com.android.example.vehsense.repository.BackendRepository
+import com.android.example.vehsense.repository.BackendRepository.token
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +38,19 @@ class VehicleViewModel(
         }
     }
 
-    /* ADD */
-
-    /* DELETE */
+    fun deleteVehicle(vehicle: Vehicle) {
+        token = BackendRepository.token.toString()
+        viewModelScope.launch {
+            try {
+                val response = communicator.deleteVehicle(vehicle.id, token)
+                response.onSuccess {
+                    _vehicles.value -= vehicle
+                }.onFailure { e ->
+                    _errorMessage.value = e.message ?: "Unknown error"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Unknown error"
+            }
+        }
+    }
 }
