@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
@@ -21,15 +22,14 @@ import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun RideScreen(
-    userId: Int,
-    token: String,
+
     onForceBack: () -> Unit,
     ) {
     val mainViewModel: MainViewModel = getMainViewModel()
     val btIsOn by mainViewModel.btIsOn.collectAsState()
 
     val viewModel = viewModel<RideViewModel>(
-        factory = RideViewModelFactory(userId, token, requireNotNull(mainViewModel.socket.value))
+        factory = RideViewModelFactory(AppContainer.sessionManager, requireNotNull(mainViewModel.socket.value))
     )
     val obdFrame by viewModel.obdFrame.collectAsState()
 

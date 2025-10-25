@@ -29,18 +29,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 
 @Composable
 fun VehiclesScreen(
-    userId: Int,
-    token: String,
     onGoToAddScreen: () -> Unit
 ) {
     val vehicleViewModel: VehicleViewModel = viewModel(
-        factory = SharedBackendViewModelFactory(userId, token)
+        factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
     )
 
     val vehicles by vehicleViewModel.vehicles.collectAsState()

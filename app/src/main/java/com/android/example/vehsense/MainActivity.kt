@@ -8,7 +8,6 @@ import com.android.example.vehsense.ui.screens.DashboardScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.rememberCoroutineScope
@@ -17,10 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.android.example.vehsense.network.BackendCommunicator
-import com.android.example.vehsense.repository.BackendRepository
+import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.storage.BluetoothStorage
-import com.android.example.vehsense.storage.UserStorage
 import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
@@ -54,53 +51,30 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        UserStorage.init(applicationContext)
+        AppContainer.init(applicationContext)
         BluetoothStorage.init(applicationContext)
 
         setContent {
             VehSenseTheme {
                 val navController = rememberNavController()
-
                 NavHost(navController = navController, startDestination = "splash") {
                     composable("splash") {
                         val scope = rememberCoroutineScope()
                         SplashScreen(onFinished = {
-                            if (UserStorage.wasPreviouslyLoggedIn()) {
-                                val session = UserStorage.getSession()
-                                if (session != null) {
-                                    val backend = BackendCommunicator()
-                                    val userId: Int = session.userId.toInt()
-                                    val refreshKey = session.refreshKey
-                                    scope.launch {
-                                        try {
-                                            val authResponse =
-                                                backend.getFreshToken(userId, refreshKey)
-                                                    .getOrThrow()
-                                            UserStorage.saveSession(
-                                                authResponse.localId,
-                                                authResponse.refreshKey
-                                            )
-
-                                            BackendRepository.userId = authResponse.localId
-                                            BackendRepository.token = authResponse.token
-
-                                            navController.navigate("dashboard") {
-                                                popUpTo("splash") { inclusive = true }
-                                            }
-                                        } catch (e: Exception) {
-                                            Log.d("storage-login-error", e.toString())
-                                            navController.navigate("login") {
-                                                popUpTo("splash") { inclusive = true }
-                                            }
-                                        }
+                            scope.launch {
+                                val ok = AppContainer.sessionManager.loadSession()
+                                if (ok) {
+                                    navController.navigate("dashboard") {
+                                        popUpTo("splash") { inclusive = true }
+                                    }
+                                } else {
+                                    navController.navigate("login") {
+                                        popUpTo("splash") { inclusive = true }
                                     }
                                 }
-                            } else {
-                                navController.navigate("login") {
-                                    popUpTo("splash") { inclusive = true }
-                                }
                             }
-                        })
+                        }
+                        )
                     }
                     composable("login") {
                         LoginScreen(
@@ -108,10 +82,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("signup")
                             },
                             onLoginSuccess = {
-                                UserStorage.saveSession(it.localId, it.refreshKey)
-
-                                BackendRepository.userId = it.localId
-                                BackendRepository.token = it.token
+                                AppContainer.sessionManager.saveSession(it.token, it.refreshKey, it.localId)
 
                                 navController.navigate("dashboard") {
                                     popUpTo("login") { inclusive = true }
@@ -123,10 +94,7 @@ class MainActivity : ComponentActivity() {
                         SignUpScreen(
                             onGoBack = { navController.popBackStack() },
                             onSignUpSuccess = {
-                                UserStorage.saveSession(it.localId, it.refreshKey)
-
-                                BackendRepository.userId = it.localId
-                                BackendRepository.token = it.token
+                                AppContainer.sessionManager.saveSession(it.token, it.refreshKey, it.localId)
 
                                 navController.navigate("dashboard") {
                                     popUpTo("signup") { inclusive = true }
@@ -135,10 +103,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("dashboard") {
-                        if (BackendRepository.userId == null || BackendRepository.token == null) {
-                            throw IllegalArgumentException("DashboardScreen requires Backend Repository to be initialized")
-                        }
-
                         DashboardScreen(
                             onGoToBT = { navController.navigate("btOverview") },
                             onGoToVehicles = { navController.navigate("vehicles") },
@@ -157,19 +121,14 @@ class MainActivity : ComponentActivity() {
                         DeviceDiscoveryScreen(
                             onSelectedDevice = {
                                 navController.popBackStack()
-                           },
+                            },
                         )
                     }
                     composable("reports") {
-                        ReportsScreen(
-                            userId = requireNotNull(BackendRepository.userId),
-                            token = requireNotNull(BackendRepository.token)
-                        )
+                        ReportsScreen()
                     }
                     composable("vehicles") {
                         VehiclesScreen(
-                            userId = requireNotNull(BackendRepository.userId),
-                            token = requireNotNull(BackendRepository.token),
                             onGoToAddScreen = {
                                 navController.navigate("vehicleAddScreen")
                             }
@@ -177,8 +136,6 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("vehicleAddScreen") {
                         VehicleAddScreen(
-                            userId = requireNotNull(BackendRepository.userId),
-                            token = requireNotNull(BackendRepository.token),
                             onFinished = {
                                 navController.popBackStack()
                             }
@@ -186,8 +143,6 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("ride") {
                         RideScreen(
-                            userId = requireNotNull(BackendRepository.userId),
-                            token = requireNotNull(BackendRepository.token),
                             onForceBack = {
                                 navController.navigate("dashboard") {
                                     popUpTo("ride") { inclusive = true }

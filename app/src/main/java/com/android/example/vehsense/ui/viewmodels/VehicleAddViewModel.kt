@@ -4,14 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.example.vehsense.model.VehicleAddRequest
 import com.android.example.vehsense.network.BackendCommunicator
+import com.android.example.vehsense.network.SessionManager
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class VehicleAddViewModel(
-    private val userId: Int,
-    private val token: String,
+    private val sessionManager: SessionManager,
     private val communicator: BackendCommunicator = BackendCommunicator(),
 ): ViewModel() {
 
@@ -88,6 +88,12 @@ class VehicleAddViewModel(
                     plates = plates?.ifBlank { null },
                     expectedFuel = expectedFuelDouble
                 )
+
+                val token = sessionManager.getToken()
+                if (token == null) {
+                    _errorMessage.value = "Could not authorize"
+                    return@launch
+                }
 
                 val response = communicator.addVehicle(request, token)
 

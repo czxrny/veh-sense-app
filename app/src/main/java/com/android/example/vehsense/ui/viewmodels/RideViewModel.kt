@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.example.vehsense.bluetooth.ELMCommander
 import com.android.example.vehsense.bluetooth.ELMPoller
 import com.android.example.vehsense.model.ObdFrame
+import com.android.example.vehsense.network.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,8 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class RideViewModel(
-    private val userId: Int,
-    private var token: String,
+    private val sessionManager: SessionManager,
     private val btSocket: BluetoothSocket
 ): ViewModel() {
     private val _obdFrame = MutableStateFlow(ObdFrame())

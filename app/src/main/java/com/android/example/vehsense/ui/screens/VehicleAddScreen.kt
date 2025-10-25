@@ -24,18 +24,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 
 @Composable
 fun VehicleAddScreen(
-    userId: Int,
-    token: String,
     onFinished: () -> Unit
 ) {
     val vehicleAddViewModel: VehicleAddViewModel = viewModel(
-        factory = SharedBackendViewModelFactory(userId, token)
+        factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
     )
 
     val error by vehicleAddViewModel.errorMessage.collectAsState()

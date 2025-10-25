@@ -5,19 +5,14 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-data class UserSession(
-    val userId: String,
-    val refreshKey: String
-)
+class UserStorage(context: Context) {
+    private val PREFS_NAME = "secure_prefs"
+    private val KEY_USER_ID = "user_id"
+    private val KEY_REFRESH = "refresh_key"
 
-object UserStorage {
-    private const val PREFS_NAME = "secure_prefs"
-    private const val KEY_USER_ID = "user_id"
-    private const val KEY_REFRESH = "refresh_key"
+    private val prefs: SharedPreferences
 
-    private lateinit var prefs: SharedPreferences
-
-    fun init(context: Context) {
+    init {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -31,28 +26,37 @@ object UserStorage {
         )
     }
 
-    fun saveSession(userId: Int, key: String) {
+    fun saveRefreshKey(key: String) {
         prefs.edit().apply {
-            putString(KEY_USER_ID, userId.toString())
             putString(KEY_REFRESH, key)
             apply()
         }
     }
 
-    fun getSession(): UserSession? {
-        val id = prefs.getString(KEY_USER_ID, null)
+    fun getRefreshKey(): String? {
         val key = prefs.getString(KEY_REFRESH, null)
+        return key
+    }
 
-        return if (id != null && key != null) {
-            UserSession(id, key)
-        } else {
-            null
+    fun saveUserId(userId: Int) {
+        prefs.edit().apply {
+            putString(KEY_USER_ID, userId.toString())
+            apply()
         }
     }
 
-    fun clearSession() {
-        prefs.edit().clear().apply()
+    fun getUserId(): Int? {
+        return prefs.getString(KEY_USER_ID, null)?.toInt()
     }
 
-    fun wasPreviouslyLoggedIn(): Boolean = getSession() != null
+    fun clearUserId() {
+        prefs.edit().remove(KEY_USER_ID).apply()
+    }
+
+    fun clearRefreshKey() {
+        prefs.edit().remove(KEY_REFRESH).apply()
+    }
+
+    fun wasPreviouslyLoggedIn(): Boolean = getRefreshKey() != null
 }
+

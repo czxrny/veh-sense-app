@@ -6,8 +6,6 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun ReportsScreen(
-    userId: Int,
-    token: String
 ) {
     Text("This is the REPORTS SCREEN", style = MaterialTheme.typography.titleLarge)
 }
