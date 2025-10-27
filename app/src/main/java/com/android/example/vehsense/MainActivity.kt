@@ -29,6 +29,7 @@ import com.android.example.vehsense.ui.screens.VehicleAddScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
+import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 import kotlinx.coroutines.launch
@@ -153,10 +154,18 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("vehicleAddScreen") {
+                        val vm: VehicleAddViewModel = viewModel(
+                            factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
+                        )
+
+                        val error by vm.errorMessage.collectAsState()
+
                         VehicleAddScreen(
-                            onFinished = {
-                                navController.popBackStack()
-                            }
+                            onSubmit = { vm.addVehicle(
+                                it,
+                                onSuccess = { navController.popBackStack() }
+                            ) },
+                            errorMessage = error
                         )
                     }
                     composable("ride") {

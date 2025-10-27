@@ -2,6 +2,7 @@ package com.android.example.vehsense.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.example.vehsense.model.NewVehicleForm
 import com.android.example.vehsense.model.VehicleAddRequest
 import com.android.example.vehsense.network.BackendCommunicator
 import com.android.example.vehsense.network.SessionManager
@@ -19,13 +20,7 @@ class VehicleAddViewModel(
     val errorMessage: StateFlow<String?> = _errorMessage
 
     fun addVehicle(
-        brand: String,
-        model: String,
-        year: String,
-        engineCapacity: String,
-        enginePower: String,
-        plates: String?,
-        expectedFuel: String,
+        form: NewVehicleForm,
         onSuccess: () -> Unit
     ) {
         fun String.capitalizeFirst(): String {
@@ -34,8 +29,8 @@ class VehicleAddViewModel(
 
         viewModelScope.launch {
             try {
-                val formattedBrand = brand.capitalizeFirst()
-                val formattedModel = model.capitalizeFirst()
+                val formattedBrand = form.brand.capitalizeFirst()
+                val formattedModel = form.model.capitalizeFirst()
 
                 if (formattedBrand.isEmpty()) {
                     _errorMessage.value = "Brand must not be empty"
@@ -47,10 +42,10 @@ class VehicleAddViewModel(
                     return@launch
                 }
 
-                val yearInt = year.toIntOrNull()
-                val engineCapacityInt = engineCapacity.toIntOrNull()
-                val enginePowerInt = enginePower.toIntOrNull()
-                val expectedFuelDouble = expectedFuel.toDoubleOrNull()
+                val yearInt = form.year.toIntOrNull()
+                val engineCapacityInt = form.engineCapacity.toIntOrNull()
+                val enginePowerInt = form.enginePower.toIntOrNull()
+                val expectedFuelDouble = form.expectedFuel.toDoubleOrNull()
 
                 if (yearInt == null || engineCapacityInt == null || enginePowerInt == null || expectedFuelDouble == null) {
                     _errorMessage.value = "Invalid number format"
@@ -85,7 +80,7 @@ class VehicleAddViewModel(
                     year = yearInt,
                     engineCapacity = engineCapacityInt,
                     enginePower = enginePowerInt,
-                    plates = plates?.ifBlank { null },
+                    plates = form.plates.ifBlank { null },
                     expectedFuel = expectedFuelDouble
                 )
 
