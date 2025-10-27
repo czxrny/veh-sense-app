@@ -1,6 +1,7 @@
 package com.android.example.vehsense.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -64,6 +66,7 @@ fun VehiclesScreen(
                 modifier = Modifier
                     .size(200.dp)
                     .padding(16.dp)
+                    .background(color = Color.White, shape = RectangleShape)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Are you sure you want to delete this vehicle?")
