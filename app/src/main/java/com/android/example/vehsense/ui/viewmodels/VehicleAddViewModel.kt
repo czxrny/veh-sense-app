@@ -15,18 +15,18 @@ class VehicleAddViewModel(
     private val sessionManager: SessionManager,
     private val communicator: BackendCommunicator = BackendCommunicator(),
 ): ViewModel() {
-
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    private val _isSuccess = MutableStateFlow<Boolean?>(null)
+    val isSuccess: StateFlow<Boolean?> = _isSuccess
+
     fun addVehicle(
-        form: NewVehicleForm,
-        onSuccess: () -> Unit
+        form: NewVehicleForm
     ) {
         fun String.capitalizeFirst(): String {
             return this.lowercase().replaceFirstChar { it.uppercase() }
         }
-
         viewModelScope.launch {
             try {
                 val formattedBrand = form.brand.capitalizeFirst()
@@ -93,13 +93,15 @@ class VehicleAddViewModel(
                 val response = communicator.addVehicle(request, token)
 
                 if (response.isSuccess) {
-                    onSuccess()
+                    _isSuccess.value = true
                 } else {
                     _errorMessage.value = response.exceptionOrNull()?.message ?: "Unknown error"
+                    _isSuccess.value = false
                 }
 
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Unknown error"
+                _isSuccess.value = false
             }
         }
     }

@@ -210,12 +210,16 @@ class MainActivity : ComponentActivity() {
                         )
 
                         val error by vm.errorMessage.collectAsState()
+                        val isSuccess by vm.isSuccess.collectAsState()
+
+                        LaunchedEffect(isSuccess) {
+                            if (isSuccess == true) {
+                                navController.popBackStack()
+                            }
+                        }
 
                         VehicleAddScreen(
-                            onSubmit = { vm.addVehicle(
-                                it,
-                                onSuccess = { navController.popBackStack() }
-                            ) },
+                            onSubmit = { vm.addVehicle(it) },
                             errorMessage = error
                         )
                     }
