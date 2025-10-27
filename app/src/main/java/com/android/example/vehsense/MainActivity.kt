@@ -10,6 +10,7 @@ import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,6 +30,7 @@ import com.android.example.vehsense.ui.screens.VehicleAddScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
+import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
@@ -66,22 +68,27 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "splash") {
                     composable("splash") {
-                        val scope = rememberCoroutineScope()
-                        SplashScreen(onFinished = {
-                            scope.launch {
-                                val ok = AppContainer.sessionManager.loadSession()
-                                if (ok) {
-                                    navController.navigate("dashboard") {
-                                        popUpTo("splash") { inclusive = true }
-                                    }
-                                } else {
-                                    navController.navigate("login") {
-                                        popUpTo("splash") { inclusive = true }
-                                    }
+                        val vm: SplashViewModel = viewModel(
+                            factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
+                        )
+
+                        val isSessionValid by vm.isSessionValid.collectAsState()
+
+                        SplashScreen()
+
+                        LaunchedEffect(isSessionValid) {
+                            when (isSessionValid) {
+                                true -> navController.navigate("dashboard") {
+                                    popUpTo("splash") { inclusive = true }
                                 }
+
+                                false -> navController.navigate("login") {
+                                    popUpTo("splash") { inclusive = true }
+                                }
+
+                                null -> Unit
                             }
                         }
-                        )
                     }
                     composable("login") {
                         LoginScreen(

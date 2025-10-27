@@ -3,6 +3,8 @@ package com.android.example.vehsense.ui.viewmodels.utils
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.example.vehsense.network.SessionManager
+import com.android.example.vehsense.ui.screens.SplashScreen
+import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 
@@ -12,6 +14,9 @@ class SharedBackendViewModelFactory(
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
+            modelClass.isAssignableFrom(SplashViewModel::class.java) ->
+                SplashViewModel(sessionManager) as T
+
             modelClass.isAssignableFrom(VehicleViewModel::class.java) ->
                 VehicleViewModel(sessionManager) as T
 
