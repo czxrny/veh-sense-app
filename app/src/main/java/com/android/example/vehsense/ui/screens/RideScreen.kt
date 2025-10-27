@@ -16,14 +16,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,23 +28,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.core.AppContainer
-import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
-import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
-import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun RideScreen(
+    viewModel: RideViewModel,
+    btIsOn: Boolean,
     onForceBack: () -> Unit,
-    ) {
-    val mainViewModel: MainViewModel = getMainViewModel()
-    val btIsOn by mainViewModel.btIsOn.collectAsState()
-
-    val viewModel = viewModel<RideViewModel>(
-        factory = RideViewModelFactory(AppContainer.sessionManager, requireNotNull(mainViewModel.socket.value))
-    )
+) {
     val obdFrame by viewModel.obdFrame.collectAsState()
 
     var showExitPopup by remember { mutableStateOf(false) }

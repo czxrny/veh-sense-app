@@ -31,10 +31,15 @@ import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
 import com.android.example.vehsense.ui.viewmodels.AuthViewModel
+import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
+import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
+import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
+import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -142,7 +147,9 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("dashboard") {
+                        val vm = getMainViewModel()
                         DashboardScreen(
+                            viewModel = vm,
                             onGoToBT = { navController.navigate("btOverview") },
                             onGoToVehicles = { navController.navigate("vehicles") },
                             onGoToReports = { navController.navigate("reports") },
@@ -150,15 +157,27 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("btOverview") {
+                        val vm = getMainViewModel()
+                        val deviceInfo by vm.deviceInfo.collectAsState()
+
                         DeviceOverviewScreen(
+                            deviceInfo = deviceInfo,
                             onGoToDiscoveryScreen = {
                                 navController.navigate("deviceDiscovery")
                             },
                         )
                     }
                     composable("deviceDiscovery") {
+                        val vm = getMainViewModel()
+                        val btIsOn by vm.btIsOn.collectAsState()
+
+                        val deviceVM: DeviceDiscoveryViewModel = viewModel()
+
                         DeviceDiscoveryScreen(
+                            btIsOn = btIsOn,
+                            deviceDiscoveryViewModel = deviceVM,
                             onSelectedDevice = {
+                                vm.updateDeviceInfo(it)
                                 navController.popBackStack()
                             },
                         )
@@ -201,7 +220,17 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("ride") {
+                        val vm = getMainViewModel()
+                        val btIsOn by vm.btIsOn.collectAsState()
+                        val socket = vm.socket.value
+
+                        val rideVM = viewModel<RideViewModel>(
+                            factory = RideViewModelFactory(AppContainer.sessionManager, requireNotNull(socket))
+                        )
+
                         RideScreen(
+                            viewModel = rideVM,
+                            btIsOn = btIsOn,
                             onForceBack = {
                                 navController.navigate("dashboard") {
                                     popUpTo("ride") { inclusive = true }

@@ -12,20 +12,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun DashboardScreen(
+    viewModel: MainViewModel,
     onGoToBT: () -> Unit,
     onGoToVehicles: () -> Unit,
     onGoToReports: () -> Unit,
     onGoToRideScreen: () -> Unit
 ) {
-    val viewModel = getMainViewModel()
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
-
     val deviceInfo by viewModel.deviceInfo.collectAsState()
 
     val elmMessageSuffix = "Connection state:"
