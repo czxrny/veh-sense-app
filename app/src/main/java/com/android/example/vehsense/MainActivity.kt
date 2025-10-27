@@ -30,6 +30,7 @@ import com.android.example.vehsense.ui.screens.VehicleAddScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
+import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
@@ -91,28 +92,52 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable("login") {
-                        LoginScreen(
-                            onGoToSignUp = {
-                                navController.navigate("signup")
-                            },
-                            onLoginSuccess = {
+                        val vm: AuthViewModel = viewModel()
+
+                        val currentSession by vm.currentSession.collectAsState()
+
+                        LaunchedEffect(currentSession) {
+                            currentSession?.let {
                                 AppContainer.sessionManager.saveSession(it.token, it.refreshKey, it.localId)
 
                                 navController.navigate("dashboard") {
                                     popUpTo("login") { inclusive = true }
                                 }
                             }
+                        }
+
+                        val error by vm.errorMessage.collectAsState()
+
+                        LoginScreen(
+                            onLoginAttempt = { vm.login(it.email, it.password) },
+                            errorMessage = error,
+                            onGoToSignUp = {
+                                navController.navigate("signup")
+                            }
                         )
                     }
                     composable("signup") {
-                        SignUpScreen(
-                            onGoBack = { navController.popBackStack() },
-                            onSignUpSuccess = {
+                        val vm: AuthViewModel = viewModel()
+
+                        val currentSession by vm.currentSession.collectAsState()
+
+                        LaunchedEffect(currentSession) {
+                            currentSession?.let {
                                 AppContainer.sessionManager.saveSession(it.token, it.refreshKey, it.localId)
 
                                 navController.navigate("dashboard") {
                                     popUpTo("signup") { inclusive = true }
                                 }
+                            }
+                        }
+
+                        val error by vm.errorMessage.collectAsState()
+
+                        SignUpScreen(
+                            onSignUpAttempt = { vm.login(it.email, it.password) },
+                            errorMessage = error,
+                            onGoToLogin = {
+                                navController.navigate("login")
                             }
                         )
                     }

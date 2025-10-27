@@ -12,11 +12,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,24 +22,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.model.AuthResponse
-import com.android.example.vehsense.ui.viewmodels.AuthViewModel
+
+data class LoginCredentials(
+    val email: String = "",
+    val password: String = ""
+)
 
 @Composable
 fun LoginScreen(
-    authViewModel: AuthViewModel = viewModel(),
+    onLoginAttempt: (LoginCredentials) -> Unit,
     onGoToSignUp: () -> Unit,
-    onLoginSuccess: (AuthResponse) -> Unit
+    errorMessage: String?
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    val errorMessage by authViewModel.errorMessage.collectAsState()
-    val session by authViewModel.currentSession.collectAsState()
-
-    LaunchedEffect(session) {
-        session?.let { onLoginSuccess(it) }
-    }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -91,14 +85,14 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                authViewModel.login(email, password)
+                onLoginAttempt(LoginCredentials(email, password))
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Log In")
         }
 
-        if (errorMessage != null) {
+        errorMessage?.let {
             Text(
                 text = errorMessage ?: "",
                 color = Color.Red,
