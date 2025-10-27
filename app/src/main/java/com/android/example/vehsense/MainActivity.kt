@@ -10,9 +10,12 @@ import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -24,7 +27,10 @@ import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.VehicleAddScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
+import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
+import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
+import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -128,7 +134,19 @@ class MainActivity : ComponentActivity() {
                         ReportsScreen()
                     }
                     composable("vehicles") {
+                        val vm: VehicleViewModel = viewModel(
+                            factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
+                        )
+                        val vehicles by vm.vehicles.collectAsState()
+                        val error by vm.errorMessage.collectAsState()
+
                         VehiclesScreen(
+                            uiState = VehiclesUiState(
+                                vehicles = vehicles,
+                                error = error
+                            ),
+                            onRefresh = { vm.getVehicles() },
+                            onDelete = { vm.deleteVehicle(it) },
                             onGoToAddScreen = {
                                 navController.navigate("vehicleAddScreen")
                             }

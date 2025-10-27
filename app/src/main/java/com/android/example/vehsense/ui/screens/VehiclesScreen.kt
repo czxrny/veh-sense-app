@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,28 +29,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.model.Vehicle
-import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
-import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
+
+data class VehiclesUiState(
+    val vehicles: List<Vehicle> = emptyList(),
+    val error: String? = null
+)
 
 @Composable
 fun VehiclesScreen(
+    uiState: VehiclesUiState,
+    onRefresh: () -> Unit,
+    onDelete: (Vehicle) -> Unit,
     onGoToAddScreen: () -> Unit
 ) {
-    val vehicleViewModel: VehicleViewModel = viewModel(
-        factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
-    )
-
-    val vehicles by vehicleViewModel.vehicles.collectAsState()
-    val error by vehicleViewModel.errorMessage.collectAsState()
-
     var showDeletePopup by remember { mutableStateOf<Vehicle?>(null) }
 
-    LaunchedEffect(Unit) {
-        vehicleViewModel.getVehicles()
-    }
+    LaunchedEffect(Unit) { onRefresh() }
 
     showDeletePopup?.let { vehicle ->
         BackHandler() {
@@ -66,7 +60,7 @@ fun VehiclesScreen(
                 modifier = Modifier
                     .size(200.dp)
                     .padding(16.dp)
-                    .background(color = Color.White, shape = RectangleShape)
+                        .background(color = Color.White, shape = RectangleShape)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Are you sure you want to delete this vehicle?")
@@ -76,7 +70,7 @@ fun VehiclesScreen(
                     ) {
                         Button(
                             onClick = {
-                                vehicleViewModel.deleteVehicle(vehicle)
+                                onDelete(vehicle)
                                 showDeletePopup = null
                             },
                             colors = ButtonDefaults.buttonColors(
@@ -115,7 +109,7 @@ fun VehiclesScreen(
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(vehicles) { vehicle ->
+            items(uiState.vehicles) { vehicle ->
                 Row {
                     Text("${vehicle.brand} ${vehicle.model}")
                     Button(
@@ -140,7 +134,7 @@ fun VehiclesScreen(
         ) {
             Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
         }
-        error?.let {
+        uiState.error?.let {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = it,
