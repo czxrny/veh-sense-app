@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity() {
                         val error by vm.errorMessage.collectAsState()
 
                         SignUpScreen(
-                            onSignUpAttempt = { vm.login(it.email, it.password) },
+                            onSignUpAttempt = { vm.signUp(it.name, it.email, it.password) },
                             errorMessage = error,
                             onGoToLogin = {
                                 navController.navigate("login")
