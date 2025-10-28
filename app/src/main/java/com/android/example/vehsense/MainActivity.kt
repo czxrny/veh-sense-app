@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.storage.BluetoothStorage
+import com.android.example.vehsense.storage.VehicleStorage
 import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
@@ -39,8 +40,6 @@ import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
-import kotlinx.coroutines.flow.collectIndexed
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -186,6 +185,8 @@ class MainActivity : ComponentActivity() {
                         ReportsScreen()
                     }
                     composable("vehicles") {
+                        val mainVM = getMainViewModel()
+
                         val vm: VehicleViewModel = viewModel(
                             factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
                         )
@@ -198,7 +199,11 @@ class MainActivity : ComponentActivity() {
                                 error = error
                             ),
                             onRefresh = { vm.getVehicles() },
-                            onDelete = { vm.deleteVehicle(it) },
+                            onSaveVehicle = { mainVM.setCurrentVehicle(it) },
+                            onDelete = {
+                                vm.deleteVehicle(it)
+                                mainVM.setCurrentVehicle(null)
+                            },
                             onGoToAddScreen = {
                                 navController.navigate("vehicleAddScreen")
                             }

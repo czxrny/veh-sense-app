@@ -13,7 +13,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.example.vehsense.bluetooth.ELMCommander
 import com.android.example.vehsense.model.DeviceInfo
+import com.android.example.vehsense.model.Vehicle
+import com.android.example.vehsense.network.CurrentVehicleManager
 import com.android.example.vehsense.storage.BluetoothStorage
+import com.android.example.vehsense.storage.VehicleStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +26,10 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel(
+    application: Application,
+    private val currentVehicleManager: CurrentVehicleManager
+) : AndroidViewModel(application) {
     private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     private val _btIsOn = MutableStateFlow(false)
@@ -37,6 +43,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isConnected = MutableStateFlow<Boolean?>(false)
     val isConnected: StateFlow<Boolean?> = _isConnected.asStateFlow()
+
+    private val _selectedVehicle = MutableStateFlow<Vehicle?>(null)
+    val selectedVehicle: StateFlow<Vehicle?> = _selectedVehicle.asStateFlow()
 
     fun disconnectFromDevice() {
         val socket = _socket.value
@@ -89,6 +98,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         BluetoothStorage.saveDeviceInfo(deviceInfo)
     }
 
+    fun setCurrentVehicle(vehicle: Vehicle?) {
+        _selectedVehicle.value = vehicle
+
+        when(vehicle){
+            null -> currentVehicleManager.clear()
+            else -> currentVehicleManager.setNewVehicle(vehicle)
+        }
+    }
+
+    private fun loadCurrentVehicle() {
+        viewModelScope.launch {
+            val vehicle = currentVehicleManager.getVehicle()
+            _selectedVehicle.value = vehicle
+        }
+    }
+
     fun connectToSavedDevice() {
         val deviceInfo = BluetoothStorage.getSavedDeviceInfo()
         Log.d("VehsenseBTSocket", "Connecting to socket by address")
@@ -132,6 +157,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         getApplication<Application>().registerReceiver(bluetoothStateReceiver, stateChangingFilter)
 
         _deviceInfo.value = BluetoothStorage.getSavedDeviceInfo()
+        loadCurrentVehicle()
 
         val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
         _btIsOn.value = bluetoothAdapter?.isEnabled == true

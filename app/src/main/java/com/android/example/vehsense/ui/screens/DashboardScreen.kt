@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
+import okhttp3.internal.notifyAll
 
 @Composable
 fun DashboardScreen(
@@ -27,9 +28,11 @@ fun DashboardScreen(
     val socket by viewModel.socket.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val deviceInfo by viewModel.deviceInfo.collectAsState()
+    val selectedVehicle by viewModel.selectedVehicle.collectAsState()
 
     val elmMessageSuffix = "Connection state:"
     var elmMessage by remember { mutableStateOf("") }
+    var vehicleMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -66,8 +69,14 @@ fun DashboardScreen(
             null -> "$elmMessageSuffix CONNECTING..."
         }
 
+        vehicleMessage = when(selectedVehicle) {
+            null -> "No vehicle selected. Select the vehicle in vehicle tab."
+            else -> "Vehicle: ${selectedVehicle!!.brand} ${selectedVehicle!!.model}"
+        }
+
         Text("Bluetooth State: $btIsOn")
         Text(elmMessage)
+        Text(vehicleMessage)
         Spacer(Modifier.height(8.dp))
 
         if (isConnected == null || isConnected == false) {
@@ -99,7 +108,7 @@ fun DashboardScreen(
 
         Button(
             onClick = { onGoToRideScreen() },
-            enabled = btIsOn && socket != null && socket!!.isConnected,
+            enabled = btIsOn && socket != null && socket!!.isConnected && selectedVehicle != null,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Green,
                 contentColor = Color.White,

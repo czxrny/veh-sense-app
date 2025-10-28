@@ -43,6 +43,7 @@ data class VehiclesUiState(
 fun VehiclesScreen(
     uiState: VehiclesUiState,
     onRefresh: () -> Unit,
+    onSaveVehicle: (Vehicle) -> Unit,
     onDelete: (Vehicle) -> Unit,
     onGoToAddScreen: () -> Unit
 ) {
@@ -71,6 +72,13 @@ fun VehiclesScreen(
                         }
                     ) {
                         Text("See details", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Button(
+                        onClick = {
+                            onSaveVehicle(vehicle)
+                        }
+                    ) {
+                        Text("Set as current vehicle", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
                 Spacer(Modifier.height(2.dp))

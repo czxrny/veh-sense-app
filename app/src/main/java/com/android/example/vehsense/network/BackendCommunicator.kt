@@ -144,7 +144,7 @@ class BackendCommunicator {
 
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
-                        return@withContext Result.failure(Exception("Login error: ${response.code}"))
+                        return@withContext Result.failure(Exception("Vehicle Get error: ${response.code}"))
                     }
 
                     val bodyString = response.body?.string()
@@ -153,6 +153,39 @@ class BackendCommunicator {
                     val parsed: List<Vehicle> = try {
                         val listType =
                             object : com.google.gson.reflect.TypeToken<List<Vehicle>>() {}.type
+                        Gson().fromJson(bodyString, listType)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getVehicleById(token: String, id: Int): Result<Vehicle> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${baseUrl}/vehicles/${id}")
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Vehicle Get error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed: Vehicle = try {
+                        val listType =
+                            object : com.google.gson.reflect.TypeToken<Vehicle>() {}.type
                         Gson().fromJson(bodyString, listType)
                     } catch (e: Exception) {
                         return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
@@ -183,7 +216,7 @@ class BackendCommunicator {
 
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
-                        return@withContext Result.failure(Exception("Signup error: ${response.code}"))
+                        return@withContext Result.failure(Exception("Vehicle add error: ${response.code}"))
                     }
 
                     val bodyString = response.body?.string()
