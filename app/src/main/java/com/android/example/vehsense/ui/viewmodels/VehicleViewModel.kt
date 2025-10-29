@@ -19,6 +19,8 @@ class VehicleViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    val isPrivate: Boolean = requireNotNull(sessionManager.getPrivateStatus())
+
     private val communicator: BackendCommunicator = BackendCommunicator()
 
     fun getVehicles() {

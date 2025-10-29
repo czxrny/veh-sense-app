@@ -25,6 +25,12 @@ class SessionManager(
             else userStorage.clearRefreshKey()
         }
 
+    private var private: Boolean? = null
+
+    fun getPrivateStatus(): Boolean? {
+        return private
+    }
+
     // Returns active token. Will return null if there is no refresh key + user id in storage and current token is null/expired
     suspend fun getToken(): String? {
         cachedToken?.let {
@@ -48,6 +54,7 @@ class SessionManager(
             cachedToken = authResponse.token
             refreshKey = authResponse.refreshKey
             userId = authResponse.localId
+            private = isPrivate(authResponse.token)
             true
         } catch (e: Exception) {
             Log.d("SessionManager", "Error while refreshing token: $e")
@@ -65,17 +72,31 @@ class SessionManager(
         cachedToken = null
         refreshKey = null
         userId = null
+        private = null
     }
 
     private fun isExpired(token: String): Boolean {
+        val claims = getClaimsFromToken(token) ?: return false
+
+        val exp = claims.optLong("exp", 0)
+        val currentTime = System.currentTimeMillis() / 1000
+        return exp <= currentTime
+    }
+
+    // if token contains the 'org' claim - is not private
+    private fun isPrivate(token: String): Boolean {
+        val claims = getClaimsFromToken(token) ?: return false
+
+        val org = claims.optLong("org", 0)
+        return (org.toInt() == 0)
+    }
+
+    private fun getClaimsFromToken(token: String): JSONObject? {
         val parts = token.split(".")
-        if (parts.size != 3) return true
+        if (parts.size != 3) return null
         val payload = parts[1]
         val decodedBytes = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
         val decodedString = String(decodedBytes)
-        val json = JSONObject(decodedString)
-        val exp = json.optLong("exp", 0)
-        val currentTime = System.currentTimeMillis() / 1000
-        return exp <= currentTime
+        return JSONObject(decodedString)
     }
 }

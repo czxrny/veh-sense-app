@@ -36,6 +36,7 @@ import androidx.compose.animation.fadeOut
 
 data class VehiclesUiState(
     val vehicles: List<Vehicle> = emptyList(),
+    val isPrivate: Boolean,
     val error: String? = null
 )
 
@@ -58,6 +59,7 @@ fun VehiclesScreen(
     ) {
         Text("My Vehicles", style = MaterialTheme.typography.titleLarge)
 
+        Text("Private: ${uiState.isPrivate}")
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(

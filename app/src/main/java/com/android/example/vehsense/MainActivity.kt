@@ -13,7 +13,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,7 +21,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.storage.BluetoothStorage
-import com.android.example.vehsense.storage.VehicleStorage
 import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
@@ -196,6 +194,7 @@ class MainActivity : ComponentActivity() {
                         VehiclesScreen(
                             uiState = VehiclesUiState(
                                 vehicles = vehicles,
+                                isPrivate = vm.isPrivate,
                                 error = error
                             ),
                             onRefresh = { vm.getVehicles() },
