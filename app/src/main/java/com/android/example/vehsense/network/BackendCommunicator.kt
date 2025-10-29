@@ -1,11 +1,9 @@
 package com.android.example.vehsense.network
 
-import android.util.Log
 import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.model.VehicleAddRequest
-import com.android.example.vehsense.model.VehicleUpdateForm
 import com.android.example.vehsense.model.VehicleUpdateRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +29,10 @@ class BackendCommunicator {
                 val body = json.toString()
                     .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
+                val apiKey = BuildConfig.API_KEY
                 val request = Request.Builder()
                     .url("${baseUrl}/auth/refresh")
+                    .addHeader("Authorization", "ApiKey $apiKey")
                     .post(body)
                     .build()
 
@@ -69,8 +69,10 @@ class BackendCommunicator {
                 val body = json.toString()
                     .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
+                val apiKey = BuildConfig.API_KEY
                 val request = Request.Builder()
                     .url("${baseUrl}/auth/login")
+                    .addHeader("Authorization", "ApiKey $apiKey")
                     .post(body)
                     .build()
 
@@ -109,8 +111,10 @@ class BackendCommunicator {
                 val body = json.toString()
                     .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
+                val apiKey = BuildConfig.API_KEY
                 val request = Request.Builder()
                     .url("${baseUrl}/auth/signup")
+                    .addHeader("Authorization", "ApiKey $apiKey")
                     .post(body)
                     .build()
 

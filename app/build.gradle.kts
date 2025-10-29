@@ -20,7 +20,9 @@ android {
             buildConfig = true
         }
 
-        buildConfigField("String", "BACKEND_URL", "\"${dotenv["BACKEND_URL"] ?: "https://fallback.example"}\"")
+        buildConfigField("String", "BACKEND_URL", "\"${dotenv["BACKEND_URL"] ?: ""}\"")
+        buildConfigField("String", "BATCH_RECEIVER_URL", "\"${dotenv["BATCH_RECEIVER_URL"] ?: " "}\"")
+        buildConfigField("String", "API_KEY", "\"${dotenv["API_KEY"] ?: ""}\"")
         applicationId = "com.android.example.vehsense"
         minSdk = 26
         targetSdk = 36

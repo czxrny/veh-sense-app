@@ -2,6 +2,7 @@ package com.android.example.vehsense.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.network.BackendCommunicator
 import kotlinx.coroutines.flow.MutableStateFlow
