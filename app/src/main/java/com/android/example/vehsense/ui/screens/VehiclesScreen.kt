@@ -33,6 +33,7 @@ import com.android.example.vehsense.model.Vehicle
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
+import androidx.compose.ui.unit.sp
 
 data class VehiclesUiState(
     val vehicles: List<Vehicle> = emptyList(),
@@ -45,6 +46,7 @@ fun VehiclesScreen(
     uiState: VehiclesUiState,
     onRefresh: () -> Unit,
     onSaveVehicle: (Vehicle) -> Unit,
+    onGoToUpdateScreen: (Int) -> Unit,
     onDelete: (Vehicle) -> Unit,
     onGoToAddScreen: () -> Unit
 ) {
@@ -104,6 +106,7 @@ fun VehiclesScreen(
 
     ShowVehicleDetails(
         vehicle = selectedVehicle,
+        onGoToUpdateScreen = onGoToUpdateScreen,
         onDelete = onDelete,
         onDismiss = { selectedVehicle = null }
     )
@@ -112,6 +115,7 @@ fun VehiclesScreen(
 @Composable
 fun ShowVehicleDetails(
     vehicle: Vehicle?,
+    onGoToUpdateScreen: (Int) -> Unit,
     onDelete: (Vehicle) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -146,14 +150,17 @@ fun ShowVehicleDetails(
                 ) {
                     Text("Vehicle details", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
-                    Text(v.brand)
+                    Text(v.brand, fontSize = 20.sp)
                     Spacer(Modifier.height(8.dp))
-                    Text(v.model)
+                    Text(v.model, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
-                    Text(v.year.toString())
+                    Text(v.year.toString(), fontSize = 112.sp)
                     Spacer(Modifier.height(16.dp))
                     Button(onClick = { visible = false }) {
                         Text("Close")
+                    }
+                    Button(onClick = { onGoToUpdateScreen(vehicle.id) }) {
+                        Text("Edit")
                     }
                     Button(
                         onClick = { showDeletePopup = true },

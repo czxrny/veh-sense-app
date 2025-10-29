@@ -26,6 +26,7 @@ import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.VehicleAddScreen
+import com.android.example.vehsense.ui.screens.VehicleUpdateScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
 import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
@@ -34,6 +35,7 @@ import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
+import com.android.example.vehsense.ui.viewmodels.VehicleUpdateViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
@@ -205,7 +207,8 @@ class MainActivity : ComponentActivity() {
                             },
                             onGoToAddScreen = {
                                 navController.navigate("vehicleAddScreen")
-                            }
+                            },
+                            onGoToUpdateScreen = {navController.navigate("vehicleUpdateScreen/$it")}
                         )
                     }
                     composable("vehicleAddScreen") {
@@ -226,6 +229,36 @@ class MainActivity : ComponentActivity() {
                             onSubmit = { vm.addVehicle(it) },
                             errorMessage = error
                         )
+                    }
+                    composable("vehicleUpdateScreen/{id}") { backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("id")?.toIntOrNull()
+                        id?.let { vehicleId ->
+                            val vm: VehicleUpdateViewModel = viewModel(
+                                factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
+                            )
+
+                            val error by vm.errorMessage.collectAsState()
+                            val isSuccess by vm.isSuccess.collectAsState()
+
+                            LaunchedEffect(isSuccess) {
+                                if (isSuccess == true) {
+                                    navController.popBackStack()
+                                }
+                            }
+
+                            VehicleUpdateScreen(
+                                onSubmit = { vm.updateVehicle (it, vehicleId) },
+                                errorMessage = error
+                            )
+                        }
+
+
+
+
+
+
+
+
                     }
                     composable("ride") {
                         val vm = getMainViewModel()

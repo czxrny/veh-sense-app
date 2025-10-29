@@ -5,6 +5,8 @@ import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.model.VehicleAddRequest
+import com.android.example.vehsense.model.VehicleUpdateForm
+import com.android.example.vehsense.model.VehicleUpdateRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -217,6 +219,42 @@ class BackendCommunicator {
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         return@withContext Result.failure(Exception("Vehicle add error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed = try {
+                        Gson().fromJson(bodyString, Vehicle::class.java)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun updateVehicle(vehicleAddRequest: VehicleUpdateRequest, id: Int, token: String): Result<Vehicle> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val json = Gson().toJson(vehicleAddRequest)
+
+                val body = json.toString()
+                    .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+                val request = Request.Builder()
+                    .url("${baseUrl}/vehicles/${id}")
+                    .addHeader("Authorization", "Bearer $token")
+                    .patch(body)
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Vehicle update error: ${response.code}"))
                     }
 
                     val bodyString = response.body?.string()
