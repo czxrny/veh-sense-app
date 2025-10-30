@@ -66,6 +66,7 @@ class SessionManager(
         cachedToken = newToken
         refreshKey = newRefreshKey
         userId = newUserId
+        private = isPrivate(newToken)
     }
 
     fun logout() {
