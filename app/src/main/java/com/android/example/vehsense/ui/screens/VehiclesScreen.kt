@@ -88,12 +88,14 @@ fun VehiclesScreen(
                 Spacer(Modifier.height(2.dp))
             }
         }
-        Button(
-            onClick = {
-                onGoToAddScreen()
+        if(uiState.isPrivate) {
+            Button(
+                onClick = {
+                    onGoToAddScreen()
+                }
+            ) {
+                Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
             }
-        ) {
-            Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
         }
         uiState.error?.let {
             Spacer(modifier = Modifier.height(8.dp))
@@ -105,6 +107,7 @@ fun VehiclesScreen(
     }
 
     ShowVehicleDetails(
+        isPrivate = uiState.isPrivate,
         vehicle = selectedVehicle,
         onGoToUpdateScreen = onGoToUpdateScreen,
         onDelete = onDelete,
@@ -114,12 +117,13 @@ fun VehiclesScreen(
 
 @Composable
 fun ShowVehicleDetails(
+    isPrivate: Boolean,
     vehicle: Vehicle?,
     onGoToUpdateScreen: (Int) -> Unit,
     onDelete: (Vehicle) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var showDeletePopup by remember { mutableStateOf<Boolean>(false) }
+    var showDeletePopup by remember { mutableStateOf(false) }
 
     var visible by remember { mutableStateOf(false) }
 
@@ -159,13 +163,20 @@ fun ShowVehicleDetails(
                     Button(onClick = { visible = false }) {
                         Text("Close")
                     }
-                    Button(onClick = { onGoToUpdateScreen(vehicle.id) }) {
-                        Text("Edit")
+                    if (isPrivate) {
+                        Button(onClick = { onGoToUpdateScreen(vehicle.id) }) {
+                            Text("Edit")
+                        }
                     }
-                    Button(
-                        onClick = { showDeletePopup = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red, contentColor = Color.White)
-                    ) { Text("Delete") }
+                    if (isPrivate) {
+                        Button(
+                            onClick = { showDeletePopup = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            )
+                        ) { Text("Delete") }
+                    }
                 }
             }
         }
