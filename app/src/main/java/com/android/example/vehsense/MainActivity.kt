@@ -25,6 +25,8 @@ import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
+import com.android.example.vehsense.ui.screens.UserScreen
+import com.android.example.vehsense.ui.screens.UserUiState
 import com.android.example.vehsense.ui.screens.VehicleAddScreen
 import com.android.example.vehsense.ui.screens.VehicleUpdateScreen
 import com.android.example.vehsense.ui.screens.VehiclesScreen
@@ -34,6 +36,7 @@ import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.SplashViewModel
+import com.android.example.vehsense.ui.viewmodels.UserViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleUpdateViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
@@ -152,7 +155,8 @@ class MainActivity : ComponentActivity() {
                             onGoToBT = { navController.navigate("btOverview") },
                             onGoToVehicles = { navController.navigate("vehicles") },
                             onGoToReports = { navController.navigate("reports") },
-                            onGoToRideScreen = { navController.navigate("ride") }
+                            onGoToRideScreen = { navController.navigate("ride") },
+                            onGoToUserInfo = { navController.navigate("userScreen") }
                         )
                     }
                     composable("btOverview") {
@@ -251,14 +255,25 @@ class MainActivity : ComponentActivity() {
                                 errorMessage = error
                             )
                         }
+                    }
+                    composable("userScreen") {
+                        val userVM = viewModel<UserViewModel>(
+                            factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
+                        )
 
+                        LaunchedEffect(Unit) {
+                            userVM.loadUserInfo()
+                        }
 
+                        val isPrivate = userVM.isPrivate
+                        val userInfo by userVM.userInfo.collectAsState()
 
-
-
-
-
-
+                        UserScreen(
+                            uiState = UserUiState(
+                                isPrivate = isPrivate,
+                                userInfo = userInfo,
+                            ),
+                        )
                     }
                     composable("ride") {
                         val vm = getMainViewModel()

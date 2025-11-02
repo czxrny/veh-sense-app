@@ -22,7 +22,8 @@ fun DashboardScreen(
     onGoToBT: () -> Unit,
     onGoToVehicles: () -> Unit,
     onGoToReports: () -> Unit,
-    onGoToRideScreen: () -> Unit
+    onGoToRideScreen: () -> Unit,
+    onGoToUserInfo: () -> Unit
 ) {
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
@@ -61,6 +62,13 @@ fun DashboardScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("See your reports", style = MaterialTheme.typography.bodyLarge)
+        }
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = onGoToUserInfo,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Driver info", style = MaterialTheme.typography.bodyLarge)
         }
 
         elmMessage = when(isConnected) {

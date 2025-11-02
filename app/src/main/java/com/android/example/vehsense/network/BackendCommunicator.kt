@@ -2,6 +2,8 @@ package com.android.example.vehsense.network
 
 import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.model.AuthResponse
+import com.android.example.vehsense.model.OrganizationInfo
+import com.android.example.vehsense.model.UserInfo
 import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.model.VehicleAddRequest
 import com.android.example.vehsense.model.VehicleUpdateRequest
@@ -293,6 +295,70 @@ class BackendCommunicator {
                     }
 
                     Result.success(Unit)
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getUserInfo(token: String): Result<UserInfo> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${baseUrl}/me")
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("User Info Get error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed: UserInfo = try {
+                        val listType =
+                            object : com.google.gson.reflect.TypeToken<UserInfo>() {}.type
+                        Gson().fromJson(bodyString, listType)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getUserOrganizationInfo(token: String): Result<OrganizationInfo> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${baseUrl}/me/organization")
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("User Info Get error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed: OrganizationInfo = try {
+                        val listType =
+                            object : com.google.gson.reflect.TypeToken<OrganizationInfo>() {}.type
+                        Gson().fromJson(bodyString, listType)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
                 }
             } catch (e: Exception) {
                 Result.failure(e)
