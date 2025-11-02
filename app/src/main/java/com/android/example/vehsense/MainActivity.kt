@@ -273,6 +273,15 @@ class MainActivity : ComponentActivity() {
                                 isPrivate = isPrivate,
                                 userInfo = userInfo,
                             ),
+                            onGoBack = { navController.popBackStack() },
+                            onLogout = {
+                                AppContainer.sessionManager.logout()
+                                navController.navigate("login") {
+                                    popUpTo("dashboard") {
+                                        inclusive = true
+                                    }
+                                }
+                            }
                         )
                     }
                     composable("ride") {
