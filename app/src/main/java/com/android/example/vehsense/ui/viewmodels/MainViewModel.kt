@@ -79,7 +79,6 @@ class MainViewModel(
                     val valid = elmCommander.isELM()
                     if (!valid) throw Exception("Not a valid ELM device")
 
-                   elmCommander.runConfig()
                     _socket.value = socket
                 }
 

@@ -17,6 +17,8 @@ class ELMPoller(
 ): ELMCommander(socket) {
     suspend fun pollDevice() = coroutineScope {
         try {
+            Log.d("OBD", "Initiating reading sequence...")
+            runConfig()
             while (isActive && socket.isConnected) {
                 val obdValues = mutableMapOf<String, Int>()
                 for (command in ObdCommand.entries) {
