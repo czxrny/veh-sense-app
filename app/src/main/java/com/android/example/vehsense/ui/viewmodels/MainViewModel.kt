@@ -75,11 +75,11 @@ class MainViewModel(
                         throw Exception("Unable to connect")
                     }
 
-                    val elmCommander = ELMCommander(socket)
+                    val elmCommander = ELMCommander(socket = socket)
                     val valid = elmCommander.isELM()
                     if (!valid) throw Exception("Not a valid ELM device")
 
-                    elmCommander.runConfig()
+                   elmCommander.runConfig()
                     _socket.value = socket
                 }
 

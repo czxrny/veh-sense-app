@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.example.vehsense.bluetooth.ELMCommander
 import com.android.example.vehsense.bluetooth.ELMPoller
 import com.android.example.vehsense.model.ObdFrame
 import com.android.example.vehsense.network.SessionManager
@@ -23,7 +22,8 @@ class RideViewModel(
     val obdFrame: StateFlow<ObdFrame> = _obdFrame.asStateFlow()
 
     private val elmPoller: ELMPoller = ELMPoller(
-        onFrameUpdate = { _obdFrame.value = it },
+        onFrameUpdate = { _obdFrame.value = it
+                        Log.d("OBDDATA", it.toString()) } ,
         btSocket
     )
 
@@ -50,7 +50,12 @@ class RideViewModel(
     }
 
     fun stopPolling() {
-        pollJob?.cancel()
+        if (pollJob?.isActive == true) {
+            Log.d("RideViewModel", "Cancelling OBD poll job...")
+            pollJob?.cancel()
+        } else {
+            Log.d("RideViewModel", "pollJob already inactive or null")
+        }
         pollJob = null
     }
 

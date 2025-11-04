@@ -9,22 +9,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 
 class ELMPoller(
     private val onFrameUpdate: (ObdFrame) -> Unit,
     private val socket: BluetoothSocket
 ): ELMCommander(socket) {
-
     suspend fun pollDevice() = coroutineScope {
-        while (isActive && socket.isConnected) {
-            val obdValues = mutableMapOf<String, Int>()
-            for (command in ObdCommand.entries) {
-                super.sendCommand(command.code)
-                val response = readResponse()
-                Log.d("OBD", "Resp: $response")
-                obdValues[command.name] = command.parse(response)
+        try {
+            while (isActive && socket.isConnected) {
+                val obdValues = mutableMapOf<String, Int>()
+                for (command in ObdCommand.entries) {
+                    val response = sendAndRead(command.code)
+                    Log.d("OBD", "Resp: $response")
+                    obdValues[command.name] = command.parse(response)
+                }
+                onFrameUpdate(ObdFrame(obdValues))
             }
-            onFrameUpdate(ObdFrame(obdValues))
+        } catch (e: Exception) {
+            throw e
         }
     }
 }

@@ -4,26 +4,24 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.BufferedWriter
+import kotlinx.coroutines.withTimeout
 import java.io.IOException
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
+import kotlin.coroutines.cancellation.CancellationException
 
 open class ELMCommander(
-    socket: BluetoothSocket,
+    private val socket: BluetoothSocket,
 ) {
-    private var reader: BufferedReader = BufferedReader(InputStreamReader(socket.inputStream))
-    private var writer: BufferedWriter = BufferedWriter(OutputStreamWriter(socket.outputStream))
+    private val input = socket.inputStream
+    private val output = socket.outputStream
 
     // Run ELM327 'ATI' Command to ensure the device is correct
     suspend fun isELM(): Boolean {
         return withContext(Dispatchers.IO) {
             try {
-                sendCommand("ATI")
-                val response = readResponseUntilEmpty()
-                Log.d("ELM", response)
+                val response = sendAndRead("ATI")
+                Log.d("ELM", "ATI: $response")
                 return@withContext response.contains("ELM", ignoreCase = true)
             } catch (e: IOException) {
                 Log.e("ELM", "Error checking ELM327", e)
@@ -32,14 +30,13 @@ open class ELMCommander(
         }
     }
 
+    // Run all of the config commands located in ./bluetooth/ObdCommands.kt
     suspend fun runConfig() {
         return withContext(Dispatchers.IO) {
+            Log.d("ELM", "Running the ELM327 Config...")
             try {
                 for (cfg in ObdConfig.entries) {
-                    sendCommand(cfg.command)
-                    delay(500)
-                    val response = readResponseUntilEmpty()
-                    Log.d("ELM", response)
+                    sendAndRead(cfg.command)
                 }
             } catch (e: IOException) {
                 Log.e("ELM", "Error during configuration", e)
@@ -48,67 +45,60 @@ open class ELMCommander(
         }
     }
 
-    @Throws(IOException::class)
-    protected suspend fun sendCommand(cmd: String) {
-        return withContext(Dispatchers.IO) {
-            try {
-                writer.apply {
-                    write(cmd + "\r")
-                    flush()
-                }
-            } catch (e: IOException) {
-                Log.e("ELM", "Command send error", e)
-                throw e
-            }
-        }
+    protected suspend fun sendAndRead(cmd: String, timeoutMs: Long = 3000): String {
+        sendCommand(cmd)
+        return readUntilPrompt(timeoutMs)
     }
 
-    // Reading the buffer until the stream is empty
-    @Throws(IOException::class)
-    protected suspend fun readResponseUntilEmpty(): String {
-        return withContext(Dispatchers.IO) {
-            val sb = StringBuilder()
-            try {
-                while(true) {
-                    delay(50)
-                    if (reader.ready()) {
-                        val line = reader.readLine()
-                        if (line != "" && line != ">") {
-                            sb.append(line)
-                            if (line.contains(">")) break
-                        } else {
-                            break
-                        }
-                    }
-                }
-            } catch (e: IOException) {
-                Log.e("ELM", "Read error", e)
-                throw e
-            }
-            return@withContext sb.toString().trim().removeSuffix(">")
-        }
-    }
-
-    @Throws(IOException::class)
-    suspend fun readResponse(): String = withContext(Dispatchers.IO) {
-        val sb = StringBuilder()
+    private suspend fun sendCommand(cmd: String) = withContext(Dispatchers.IO) {
         try {
-            while(true) {
-                if (reader.ready()) {
-                    val line = reader.readLine()
-                    if (line != null) {
-                        sb.append(line)
-                        if (line.contains(">")) break
-                    }
-                } else {
-                    delay(50)
-                }
-            }
-        } catch(e: IOException) {
-            Log.e("ELM", "Read error", e)
+            val data = (cmd + "\r").toByteArray()
+            output.write(data)
+            output.flush()
+            Log.d("ELM", "$cmd Command Sent")
+        } catch (e: IOException) {
+            Log.e("ELM", "Send error", e)
             throw e
         }
-        return@withContext sb.toString().trim().removeSuffix(">")
     }
 
+    // Each of the ELM responses ends with '>' sign
+    // This function reads all of the data in the Socket stream until reading the '>' sign...
+    private suspend fun readUntilPrompt(timeoutMs: Long): String = withContext(Dispatchers.IO) {
+        val sb = StringBuilder()
+        val buffer = ByteArray(256)
+
+        try {
+            withTimeout(timeoutMs) {
+                while (isActive && socket.isConnected) {
+                    val available = input.available()
+                    if (available > 0) {
+                        val bytesRead = input.read(buffer, 0, minOf(available, buffer.size))
+                        if (bytesRead > 0) {
+                            val chunk = String(buffer, 0, bytesRead)
+                            sb.append(chunk)
+                            if (sb.contains(">")) break
+                        }
+                    } else {
+                        delay(10)
+                    }
+                }
+            }
+        } catch (e: CancellationException) {
+            Log.d("ELM", "Reading stopped")
+            throw e
+        } catch (e: Exception) {
+            Log.e("ELM", "Read timeout/error", e)
+            throw IOException("ELM read timeout", e)
+        }
+
+        val raw = sb.toString()
+        Log.d("ELM", "<< $raw")
+
+        return@withContext raw
+            .replace("\r", "")
+            .replace("\n", "")
+            .trim()
+            .removeSuffix(">")
+    }
 }
