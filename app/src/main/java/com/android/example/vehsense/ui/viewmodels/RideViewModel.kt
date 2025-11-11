@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class RideViewModel(
     private val sessionManager: SessionManager,
@@ -21,9 +22,12 @@ class RideViewModel(
     private val _obdFrame = MutableStateFlow(ObdFrame())
     val obdFrame: StateFlow<ObdFrame> = _obdFrame.asStateFlow()
 
+    private val _connectionWasInterrupted = MutableStateFlow(false)
+    val connectionWasInterrupted = _connectionWasInterrupted.asStateFlow()
+
     private val elmPoller: ELMPoller = ELMPoller(
         onFrameUpdate = { _obdFrame.value = it
-                        Log.d("OBDDATA", it.toString()) } ,
+            Log.d("OBDDATA", it.toString()) } ,
         btSocket
     )
 
@@ -36,6 +40,7 @@ class RideViewModel(
                     btSocket.connect()
                 } catch (e: Exception) {
                     Log.e("RideViewModel", "Connection failed: ${e.message}")
+                    _connectionWasInterrupted.value = true
                 }
             }
         }
@@ -45,7 +50,15 @@ class RideViewModel(
         pollJob?.cancel()
 
         pollJob = viewModelScope.launch {
-            elmPoller.pollDevice()
+            try {
+                elmPoller.pollDevice()
+            } catch (e: IOException) {
+                Log.d("RideViewModel", "Device connection was interrupted: $e")
+                _connectionWasInterrupted.value = true
+            } finally {
+                Log.d("RideViewModel", "Device polling was stopped.")
+                _connectionWasInterrupted.value = true
+            }
         }
     }
 

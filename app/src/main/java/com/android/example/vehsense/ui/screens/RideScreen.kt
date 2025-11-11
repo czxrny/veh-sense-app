@@ -16,8 +16,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,28 +26,47 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import com.android.example.vehsense.ui.viewmodels.RideViewModel
+import com.android.example.vehsense.model.ObdFrame
+
+data class RideUiState(
+    val obdFrame: ObdFrame,
+    val connectionWasInterrupted: Boolean
+)
 
 @Composable
 fun RideScreen(
-    viewModel: RideViewModel,
-    btIsOn: Boolean,
-    onForceBack: () -> Unit,
+    uiState: RideUiState,
+    onStopTheRide: () -> Unit,
 ) {
-    val obdFrame by viewModel.obdFrame.collectAsState()
-
     var showExitPopup by remember { mutableStateOf(false) }
 
-    if(!btIsOn) {
-        onForceBack()
+    if(uiState.connectionWasInterrupted) {
+        onStopTheRide()
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("This is the ride screen", style = MaterialTheme.typography.titleLarge)
+
+        Text("RPM:${uiState.obdFrame.rpm}")
+        Text("Engine Load:${uiState.obdFrame.engineLoad}")
+        Text("Speed:${uiState.obdFrame.vehicleSpeed}")
+
+        Button(
+            onClick = {
+                showExitPopup = true
+            }
+        ) {
+            Text("End the ride", style = MaterialTheme.typography.bodyLarge)
+        }
     }
 
     BackHandler() {
         showExitPopup = true
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.pollData()
     }
 
     if(showExitPopup) {
@@ -75,9 +92,8 @@ fun RideScreen(
                     ) {
                         Button(
                             onClick = {
-                                viewModel.stopPolling()
                                 showExitPopup = false
-                                onForceBack()
+                                onStopTheRide()
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Red,
@@ -100,27 +116,6 @@ fun RideScreen(
                     }
                 }
             }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .padding(24.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("This is the ride screen", style = MaterialTheme.typography.titleLarge)
-
-        Text("RPM:${obdFrame.rpm}")
-        Text("Engine Load:${obdFrame.engineLoad}")
-        Text("Speed:${obdFrame.vehicleSpeed}")
-
-        Button(
-            onClick = {
-                showExitPopup = true
-            }
-        ) {
-            Text("End the ride", style = MaterialTheme.typography.bodyLarge)
         }
     }
 }

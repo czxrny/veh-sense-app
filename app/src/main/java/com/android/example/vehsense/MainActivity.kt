@@ -8,6 +8,7 @@ import com.android.example.vehsense.ui.screens.DashboardScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +26,7 @@ import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
 import com.android.example.vehsense.ui.screens.RideScreen
+import com.android.example.vehsense.ui.screens.RideUiState
 import com.android.example.vehsense.ui.screens.UserScreen
 import com.android.example.vehsense.ui.screens.UserUiState
 import com.android.example.vehsense.ui.screens.VehicleAddScreen
@@ -105,7 +107,11 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(currentSession) {
                             currentSession?.let {
-                                AppContainer.sessionManager.saveSession(it.token, it.refreshKey, it.localId)
+                                AppContainer.sessionManager.saveSession(
+                                    it.token,
+                                    it.refreshKey,
+                                    it.localId
+                                )
 
                                 navController.navigate("dashboard") {
                                     popUpTo("login") { inclusive = true }
@@ -130,7 +136,11 @@ class MainActivity : ComponentActivity() {
 
                         LaunchedEffect(currentSession) {
                             currentSession?.let {
-                                AppContainer.sessionManager.saveSession(it.token, it.refreshKey, it.localId)
+                                AppContainer.sessionManager.saveSession(
+                                    it.token,
+                                    it.refreshKey,
+                                    it.localId
+                                )
 
                                 navController.navigate("dashboard") {
                                     popUpTo("signup") { inclusive = true }
@@ -212,7 +222,7 @@ class MainActivity : ComponentActivity() {
                             onGoToAddScreen = {
                                 navController.navigate("vehicleAddScreen")
                             },
-                            onGoToUpdateScreen = {navController.navigate("vehicleUpdateScreen/$it")}
+                            onGoToUpdateScreen = { navController.navigate("vehicleUpdateScreen/$it") }
                         )
                     }
                     composable("vehicleAddScreen") {
@@ -251,7 +261,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             VehicleUpdateScreen(
-                                onSubmit = { vm.updateVehicle (it, vehicleId) },
+                                onSubmit = { vm.updateVehicle(it, vehicleId) },
                                 errorMessage = error
                             )
                         }
@@ -286,22 +296,40 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("ride") {
                         val vm = getMainViewModel()
-                        val btIsOn by vm.btIsOn.collectAsState()
-                        val socket = vm.socket.value
+                        val socket = vm.socket.collectAsState()
 
-                        val rideVM = viewModel<RideViewModel>(
-                            factory = RideViewModelFactory(AppContainer.sessionManager, requireNotNull(socket))
-                        )
+                        if (socket.value == null) {
+                            navController.navigate("dashboard") {
+                                popUpTo("ride") { inclusive = true }
+                            }
+                        } else {
+                            val rideVM = viewModel<RideViewModel>(
+                                factory = RideViewModelFactory(AppContainer.sessionManager,
+                                    socket.value!!
+                                )
+                            )
 
-                        RideScreen(
-                            viewModel = rideVM,
-                            btIsOn = btIsOn,
-                            onForceBack = {
-                                navController.navigate("dashboard") {
-                                    popUpTo("ride") { inclusive = true }
-                                }
-                            },
-                        )
+                            LaunchedEffect(Unit) {
+                                rideVM.pollData()
+                            }
+
+                            val obdFrame by rideVM.obdFrame.collectAsState()
+                            val connectionWasInterrupted by rideVM.connectionWasInterrupted.collectAsState()
+
+                            RideScreen(
+                                uiState = RideUiState(
+                                    obdFrame = obdFrame,
+                                    connectionWasInterrupted = connectionWasInterrupted
+                                ),
+                                onStopTheRide = {
+                                    /* Send the data to backend (if data not empty) */
+                                    rideVM.stopPolling()
+                                    navController.navigate("dashboard") {
+                                        popUpTo("ride") { inclusive = true }
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }
