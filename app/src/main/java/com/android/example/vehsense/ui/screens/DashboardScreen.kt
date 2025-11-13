@@ -12,8 +12,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
+import kotlinx.coroutines.awaitCancellation
 import okhttp3.internal.notifyAll
 
 @Composable
@@ -34,6 +39,11 @@ fun DashboardScreen(
     val elmMessageSuffix = "Connection state:"
     var elmMessage by remember { mutableStateOf("") }
     var vehicleMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(isConnected, btIsOn) {
+        val shouldPing = isConnected == true && btIsOn
+        viewModel.setELMHeartbeat(shouldPing)
+    }
 
     Column(
         modifier = Modifier
@@ -115,7 +125,10 @@ fun DashboardScreen(
         }
 
         Button(
-            onClick = { onGoToRideScreen() },
+            onClick = {
+                viewModel.setELMHeartbeat(enabled = false)
+                onGoToRideScreen()
+            },
             enabled = btIsOn && socket != null && socket!!.isConnected && selectedVehicle != null,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Green,

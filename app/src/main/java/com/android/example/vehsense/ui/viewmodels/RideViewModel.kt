@@ -9,6 +9,7 @@ import com.android.example.vehsense.model.ObdFrame
 import com.android.example.vehsense.network.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,6 +56,9 @@ class RideViewModel(
             } catch (e: IOException) {
                 Log.d("RideViewModel", "Device connection was interrupted: $e")
                 _connectionWasInterrupted.value = true
+            } catch (e: Exception) {
+                Log.d("RideViewModel", "An issue occurred: $e")
+                _connectionWasInterrupted.value = true
             } finally {
                 Log.d("RideViewModel", "Device polling was stopped.")
                 _connectionWasInterrupted.value = true
@@ -63,13 +67,16 @@ class RideViewModel(
     }
 
     fun stopPolling() {
-        if (pollJob?.isActive == true) {
-            Log.d("RideViewModel", "Cancelling OBD poll job...")
-            pollJob?.cancel()
-        } else {
+        viewModelScope.launch {
+            if (pollJob?.isActive == true) {
+                Log.d("RideViewModel", "Cancelling OBD poll job...")
+                pollJob?.cancel()
+                elmPoller.reset()
+            } else {
             Log.d("RideViewModel", "pollJob already inactive or null")
         }
         pollJob = null
+    }
     }
 
     fun sendDataToBackend() {

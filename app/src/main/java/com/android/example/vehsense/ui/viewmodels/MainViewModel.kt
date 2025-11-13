@@ -18,9 +18,12 @@ import com.android.example.vehsense.network.CurrentVehicleManager
 import com.android.example.vehsense.storage.BluetoothStorage
 import com.android.example.vehsense.storage.VehicleStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -58,6 +61,55 @@ class MainViewModel(
             _socket.value = null
             _isConnected.value = false
         }
+    }
+
+    private var pingJob: Job? = null
+
+    fun setELMHeartbeat(enabled: Boolean) {
+        if (enabled) {
+            startELMHeartbeat()
+        } else {
+            stopELMHeartbeat()
+        }
+    }
+
+    private fun startELMHeartbeat() {
+        if (pingJob?.isActive == true) {
+            Log.d("ELMHeartbeat", "Heartbeat already running")
+            return
+        }
+
+        pingJob = viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    while (isActive && _socket.value != null && _socket.value!!.isConnected) {
+                        val elmCommander = ELMCommander(socket = _socket.value!!)
+                        if (!elmCommander.isELM()) {
+                            _socket.value = null
+                            _isConnected.value = false
+                        }
+                        Log.d("ELMHeartbeat", "Device ready")
+                        delay(3000)
+                    }
+                }
+            } catch (e: IOException) {
+                Log.d("ELMHeartbeat", "Device connection was interrupted: $e")
+                _socket.value = null
+                _isConnected.value = false
+            } finally {
+                Log.d("ELMHeartbeat", "Device heartbeat was stopped.")
+            }
+        }
+    }
+
+    private fun stopELMHeartbeat() {
+        if (pingJob?.isActive == true) {
+            Log.d("ELMHeartbeat", "Stopping the ELM Heartbeat...")
+            pingJob?.cancel()
+        } else {
+            Log.d("ELMHeartbeat", "ELM Heartbeat already inactive or null")
+        }
+        pingJob = null
     }
 
     fun connectToDevice(bluetoothDevice: BluetoothDevice) {

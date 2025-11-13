@@ -45,6 +45,20 @@ open class ELMCommander(
         }
     }
 
+    // Reset the device
+    suspend fun reset() {
+        return withContext(Dispatchers.IO) {
+            try {
+                sendAndRead(ObdConfig.RESET.command)
+                Log.d("ELM", "Device resetted")
+                return@withContext
+            } catch (e: IOException) {
+                Log.e("ELM", "Error while resetting the device", e)
+                throw e
+            }
+        }
+    }
+
     protected suspend fun sendAndRead(cmd: String, timeoutMs: Long = 3000): String {
         sendCommand(cmd)
         return readUntilPrompt(timeoutMs)
