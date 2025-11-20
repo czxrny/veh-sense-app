@@ -8,7 +8,6 @@ import com.android.example.vehsense.ui.screens.DashboardScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.icons.Icons
@@ -215,14 +214,13 @@ class MainActivity : ComponentActivity() {
                         val vm: VehicleViewModel = viewModel(
                             factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
                         )
-                        val vehicles by vm.vehicles.collectAsState()
-                        val error by vm.errorMessage.collectAsState()
+
+                        val vehiclesState by vm.vehiclesInfo.collectAsState()
 
                         VehiclesScreen(
                             uiState = VehiclesUiState(
-                                vehicles = vehicles,
-                                isPrivate = vm.isPrivate,
-                                error = error
+                                vehiclesState = vehiclesState,
+                                isPrivate = vm.isPrivate
                             ),
                             onRefresh = { vm.getVehicles() },
                             onSaveVehicle = { mainVM.setCurrentVehicle(it) },

@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -34,11 +32,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.ui.unit.sp
+import com.android.example.vehsense.ui.components.CircularProgressionScreen
+import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 
 data class VehiclesUiState(
-    val vehicles: List<Vehicle> = emptyList(),
+    val vehiclesState: VehicleViewModel.VehiclesState,
     val isPrivate: Boolean,
-    val error: String? = null
 )
 
 @Composable
@@ -64,11 +63,17 @@ fun VehiclesScreen(
         Text("Private: ${uiState.isPrivate}")
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
-            items(uiState.vehicles) { vehicle ->
-                Row {
+        when(uiState.vehiclesState) {
+            is VehicleViewModel.VehiclesState.Loading -> CircularProgressionScreen()
+            is VehicleViewModel.VehiclesState.Error -> {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = uiState.vehiclesState.message,
+                    color = Color.Red,
+                )
+            }
+            is VehicleViewModel.VehiclesState.Success -> {
+                uiState.vehiclesState.vehicles.forEach { vehicle ->
                     Text("${vehicle.brand} ${vehicle.model}")
                     Button(
                         onClick = {
@@ -84,25 +89,17 @@ fun VehiclesScreen(
                     ) {
                         Text("Set as current vehicle", style = MaterialTheme.typography.bodyLarge)
                     }
+                    if(uiState.isPrivate) {
+                        Button(
+                            onClick = {
+                                onGoToAddScreen()
+                            }
+                        ) {
+                            Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
                 }
-                Spacer(Modifier.height(2.dp))
             }
-        }
-        if(uiState.isPrivate) {
-            Button(
-                onClick = {
-                    onGoToAddScreen()
-                }
-            ) {
-                Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        uiState.error?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = it,
-                color = Color.Red,
-            )
         }
     }
 

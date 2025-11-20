@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import com.android.example.vehsense.ui.components.CircularProgressionScreen
 import com.android.example.vehsense.ui.viewmodels.UserViewModel
 
 data class UserUiState(
@@ -100,8 +101,7 @@ fun UserScreen(
 
         when (val state = uiState.userInfo) {
             is UserViewModel.UserState.Loading -> {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Fetching data...", style = MaterialTheme.typography.bodyLarge)
+                CircularProgressionScreen()
             }
 
             is UserViewModel.UserState.Error -> {
