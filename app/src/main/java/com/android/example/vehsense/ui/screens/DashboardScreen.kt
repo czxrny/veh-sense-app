@@ -16,6 +16,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.android.example.vehsense.ui.components.DashboardTile
+import com.android.example.vehsense.ui.components.TileData
 import com.android.example.vehsense.ui.viewmodels.MainViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 import kotlinx.coroutines.awaitCancellation
@@ -24,11 +26,8 @@ import okhttp3.internal.notifyAll
 @Composable
 fun DashboardScreen(
     viewModel: MainViewModel,
-    onGoToBT: () -> Unit,
-    onGoToVehicles: () -> Unit,
-    onGoToReports: () -> Unit,
-    onGoToRideScreen: () -> Unit,
-    onGoToUserInfo: () -> Unit
+    tiles: Array<TileData>,
+    onGoToRideScreen: () -> Unit
 ) {
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
@@ -51,34 +50,11 @@ fun DashboardScreen(
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Dashboard", style = MaterialTheme.typography.titleLarge)
+        Text("VehSense Dashboard", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(32.dp))
-        Button(
-            onClick = { onGoToBT() },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Select Your BT Device", style = MaterialTheme.typography.bodyLarge)
-        }
-        Spacer(Modifier.height(32.dp))
-        Button(
-            onClick = onGoToVehicles,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Check out your vehicles", style = MaterialTheme.typography.bodyLarge)
-        }
-        Spacer(Modifier.height(32.dp))
-        Button(
-            onClick = onGoToReports,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("See your reports", style = MaterialTheme.typography.bodyLarge)
-        }
-        Spacer(Modifier.height(32.dp))
-        Button(
-            onClick = onGoToUserInfo,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Driver info", style = MaterialTheme.typography.bodyLarge)
+        tiles.forEach { tileData ->
+            DashboardTile(tileData)
+            Spacer(Modifier.height(32.dp))
         }
 
         elmMessage = when(isConnected) {
@@ -92,7 +68,8 @@ fun DashboardScreen(
             else -> "Vehicle: ${selectedVehicle!!.brand} ${selectedVehicle!!.model}"
         }
 
-        Text("Bluetooth State: $btIsOn")
+        val btStatusText = if (btIsOn) "Ready" else "Not ready"
+        Text("Bluetooth: $btStatusText")
         Text(elmMessage)
         Text(vehicleMessage)
         Spacer(Modifier.height(8.dp))

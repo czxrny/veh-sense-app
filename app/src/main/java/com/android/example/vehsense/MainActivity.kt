@@ -11,6 +11,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.storage.BluetoothStorage
+import com.android.example.vehsense.ui.components.TileData
 import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
@@ -160,13 +166,18 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("dashboard") {
                         val vm = getMainViewModel()
+
+                        val tilesArray = arrayOf(
+                            TileData("Select your ELM327 Device", Icons.Filled.Bluetooth) { navController.navigate("btOverview")  },
+                            TileData("Check out your vehicles", Icons.Filled.DirectionsCar) { navController.navigate("vehicles")  },
+                            TileData("See your reports", Icons.AutoMirrored.Filled.Assignment) { navController.navigate("reports")  },
+                            TileData("Driver info", Icons.Filled.Person) { navController.navigate("userScreen")  },
+                        )
+
                         DashboardScreen(
                             viewModel = vm,
-                            onGoToBT = { navController.navigate("btOverview") },
-                            onGoToVehicles = { navController.navigate("vehicles") },
-                            onGoToReports = { navController.navigate("reports") },
+                            tilesArray,
                             onGoToRideScreen = { navController.navigate("ride") },
-                            onGoToUserInfo = { navController.navigate("userScreen") }
                         )
                     }
                     composable("btOverview") {
