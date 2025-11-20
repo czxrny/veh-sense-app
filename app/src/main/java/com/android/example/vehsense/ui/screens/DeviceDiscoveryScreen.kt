@@ -36,7 +36,11 @@ fun DeviceDiscoveryScreen(
         onDispose { deviceDiscoveryViewModel.stopDiscovery() }
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
+    ) {
         if (!btIsOn) {
             Button(onClick = {
                 context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
@@ -55,7 +59,8 @@ fun DeviceDiscoveryScreen(
                         Button(onClick = {
                             deviceDiscoveryViewModel.stopDiscovery()
                             onSelectedDevice(DeviceInfo(device.name, device.address))
-                        }) {
+                        },
+                            ) {
                             Column(modifier = Modifier.padding(vertical = 2.dp)) {
                                 Text(text = name)
                                 Text(text = device.address, fontSize = 10.sp)
