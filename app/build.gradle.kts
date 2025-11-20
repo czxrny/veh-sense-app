@@ -65,6 +65,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha03")
     implementation("androidx.navigation:navigation-compose:2.7.3")
