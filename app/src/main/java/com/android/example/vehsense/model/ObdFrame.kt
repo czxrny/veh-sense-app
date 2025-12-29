@@ -1,5 +1,7 @@
 package com.android.example.vehsense.model
 
+import com.android.example.vehsense.local.ObdFrameEntity
+
 data class ObdFrame(
     var rpm: Int = 0,
     var engineLoad: Int = 0,
@@ -11,3 +13,11 @@ data class ObdFrame(
         vehicleSpeed = obdValues["VEHICLE_SPEED"] ?: 0,
     )
 }
+
+fun ObdFrame.toEntity(): ObdFrameEntity =
+    ObdFrameEntity(
+        timestamp = System.currentTimeMillis(),
+        rpm = rpm,
+        engineLoad = engineLoad,
+        vehicleSpeed = vehicleSpeed
+    )

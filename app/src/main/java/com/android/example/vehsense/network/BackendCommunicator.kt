@@ -1,8 +1,12 @@
 package com.android.example.vehsense.network
 
+import android.util.Base64
 import com.android.example.vehsense.BuildConfig
+import com.android.example.vehsense.local.ObdFrameEntity
 import com.android.example.vehsense.model.AuthResponse
+import com.android.example.vehsense.model.ObdFrame
 import com.android.example.vehsense.model.OrganizationInfo
+import com.android.example.vehsense.model.UploadRideRequest
 import com.android.example.vehsense.model.UserInfo
 import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.model.VehicleAddRequest
@@ -10,15 +14,19 @@ import com.android.example.vehsense.model.VehicleUpdateRequest
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPOutputStream
 
 class BackendCommunicator {
     private val client = OkHttpClient()
     private val baseUrl = BuildConfig.BACKEND_URL
+    private val batchUrl = BuildConfig.BATCH_RECEIVER_URL
 
     suspend fun getFreshToken(userId: Int, key: String): Result<AuthResponse> {
         return withContext(Dispatchers.IO) {
@@ -244,7 +252,11 @@ class BackendCommunicator {
         }
     }
 
-    suspend fun updateVehicle(vehicleAddRequest: VehicleUpdateRequest, id: Int, token: String): Result<Vehicle> {
+    suspend fun updateVehicle(
+        vehicleAddRequest: VehicleUpdateRequest,
+        id: Int,
+        token: String
+    ): Result<Vehicle> {
         return withContext(Dispatchers.IO) {
             try {
                 val json = Gson().toJson(vehicleAddRequest)
@@ -359,6 +371,56 @@ class BackendCommunicator {
                     }
 
                     Result.success(parsed)
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    // Sending rideData using bytearray containing ObdFrameEntities
+    data class UploadResponse(val success: Boolean)
+
+    suspend fun sendRideData(
+        vehicleId: Int,
+        rideFrames: List<ObdFrameEntity>,
+        token: String
+    ): Result<UploadResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 1. To json
+                val jsonBytes = Gson().toJson(rideFrames).toByteArray(Charsets.UTF_8)
+
+                // 2. Gzip
+                val byteArr = ByteArrayOutputStream()
+                GZIPOutputStream(byteArr).use { it.write(jsonBytes) }
+                val gzipBytes = byteArr.toByteArray()
+
+                // 3. Base64
+                val base64Gzip = Base64.encodeToString(gzipBytes, Base64.NO_WRAP)
+
+                // 4. Body json
+                val bodyObj = UploadRideRequest(
+                    vehicleId = vehicleId,
+                    data = base64Gzip
+                )
+                val jsonBody = Gson().toJson(bodyObj)
+                val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
+
+                // 5. Request
+                val request = Request.Builder()
+                    .url("$batchUrl/upload")
+                    .addHeader("Authorization", "Bearer $token")
+                    .post(requestBody)
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(
+                            Exception("Upload failed: HTTP ${response.code}")
+                        )
+                    }
+                    Result.success(UploadResponse(success = true))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

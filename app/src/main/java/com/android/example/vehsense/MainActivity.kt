@@ -305,16 +305,19 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("ride") {
                         val vm = getMainViewModel()
-                        val socket = vm.socket.collectAsState()
+                        val socket by vm.socket.collectAsState()
 
-                        if (socket.value == null) {
+                        if (socket == null) {
                             navController.navigate("dashboard") {
                                 popUpTo("ride") { inclusive = true }
                             }
                         } else {
-                            val rideVM = viewModel<RideViewModel>(
-                                factory = RideViewModelFactory(AppContainer.sessionManager,
-                                    socket.value!!
+                            val rideVM: RideViewModel = viewModel(
+                                factory = RideViewModelFactory(
+                                    sessionManager = AppContainer.sessionManager,
+                                    communicator = AppContainer.backend,
+                                    obdFrameDao = AppContainer.obdFrameDao,
+                                    btSocket = socket!!
                                 )
                             )
 
@@ -331,7 +334,6 @@ class MainActivity : ComponentActivity() {
                                     connectionWasInterrupted = connectionWasInterrupted
                                 ),
                                 onStopTheRide = {
-                                    /* Send the data to backend (if data not empty) */
                                     rideVM.stopPolling()
                                     navController.navigate("dashboard") {
                                         popUpTo("ride") { inclusive = true }

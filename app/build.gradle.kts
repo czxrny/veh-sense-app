@@ -9,6 +9,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -65,6 +66,13 @@ android {
 }
 
 dependencies {
+    val roomVersion = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+    ksp("androidx.room:room-compiler:$roomVersion")
+
     implementation("androidx.compose.material:material-icons-core:1.5.0")
     implementation("androidx.compose.material:material-icons-extended:1.5.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
