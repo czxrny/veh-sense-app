@@ -1,16 +1,13 @@
 package com.android.example.vehsense.ui.screens
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -24,15 +21,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import com.android.example.vehsense.model.Vehicle
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeOut
 import androidx.compose.ui.unit.sp
 import com.android.example.vehsense.ui.components.CircularProgressionScreen
+import com.android.example.vehsense.ui.components.FadePopup
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 
 data class VehiclesUiState(
@@ -59,8 +52,6 @@ fun VehiclesScreen(
             .padding(16.dp)
     ) {
         Text("My Vehicles", style = MaterialTheme.typography.titleLarge)
-
-        Text("Private: ${uiState.isPrivate}")
         Spacer(modifier = Modifier.height(16.dp))
 
         when(uiState.vehiclesState) {
@@ -103,13 +94,17 @@ fun VehiclesScreen(
         }
     }
 
-    ShowVehicleDetails(
-        isPrivate = uiState.isPrivate,
-        vehicle = selectedVehicle,
-        onGoToUpdateScreen = onGoToUpdateScreen,
-        onDelete = onDelete,
-        onDismiss = { selectedVehicle = null }
-    )
+    selectedVehicle?.let {
+        ShowVehicleDetails(
+            isPrivate = uiState.isPrivate,
+            vehicle = selectedVehicle,
+            onGoToUpdateScreen = onGoToUpdateScreen,
+            onDelete = onDelete,
+            onDismiss = {
+                selectedVehicle = null
+            }
+        )
+    }
 }
 
 @Composable
@@ -118,122 +113,98 @@ fun ShowVehicleDetails(
     vehicle: Vehicle?,
     onGoToUpdateScreen: (Int) -> Unit,
     onDelete: (Vehicle) -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     var showDeletePopup by remember { mutableStateOf(false) }
 
-    var visible by remember { mutableStateOf(false) }
-
-    // For the animated fading transitions - when entering this func, the visibility changes and the box fades in
-    LaunchedEffect(vehicle) {
-        visible = vehicle != null
-    }
-
-    BackHandler(enabled = vehicle != null) {
-        visible = false
-    }
+    var isActive by remember { mutableStateOf(true) }
 
     vehicle?.let { v ->
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(),
-            exit = fadeOut()
+        FadePopup(
+            isActive = isActive,
+            onBack = {
+                isActive = false
+            },
+            onDismiss = onDismiss
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White)
+                    .padding(16.dp)
+            ) {
+                Text("Vehicle details", style = MaterialTheme.typography.titleLarge)
+                Spacer(Modifier.height(8.dp))
+                Text(v.brand, fontSize = 20.sp)
+                Spacer(Modifier.height(8.dp))
+                Text(v.model, fontSize = 14.sp)
+                Spacer(Modifier.height(8.dp))
+                Text(v.year.toString(), fontSize = 112.sp)
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = {
+                    isActive = false
+                }) {
+                    Text("Close", style = MaterialTheme.typography.bodyLarge)
+                }
+                if (isPrivate) {
+                    Button(onClick = { onGoToUpdateScreen(vehicle.id) }) {
+                        Text("Edit", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Button(
+                        onClick = { showDeletePopup = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        )
+                    ) { 
+                        Text("Delete", style = MaterialTheme.typography.bodyLarge) 
+                    }
+                }
+            }
+
+            FadePopup(
+                isActive = showDeletePopup,
+                onBack = {
+                    showDeletePopup = false
+                }
             ) {
                 Column(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Vehicle details", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(8.dp))
-                    Text(v.brand, fontSize = 20.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Text(v.model, fontSize = 14.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Text(v.year.toString(), fontSize = 112.sp)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { visible = false }) {
-                        Text("Close")
-                    }
-                    if (isPrivate) {
-                        Button(onClick = { onGoToUpdateScreen(vehicle.id) }) {
-                            Text("Edit")
-                        }
-                    }
-                    if (isPrivate) {
+                    Text("Are you sure you want to delete this vehicle?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Button(
-                            onClick = { showDeletePopup = true },
+                            onClick = {
+                                onDelete(vehicle)
+                                showDeletePopup = false
+                                isActive = false
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Red,
                                 contentColor = Color.White
                             )
-                        ) { Text("Delete") }
-                    }
-                }
-            }
-        }
-
-        if(showDeletePopup) {
-            BackHandler() {
-                showDeletePopup = false
-            }
-
-            Popup(
-                alignment = Alignment.Center,
-                onDismissRequest = { showDeletePopup = false }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(300.dp)
-                        .padding(16.dp)
-                        .background(color = Color.White, shape = RectangleShape)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Are you sure you want to delete this vehicle?")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Button(
-                                onClick = {
-                                    onDelete(vehicle)
-                                    showDeletePopup = false
-                                    visible = false
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Red,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Text("YES", style = MaterialTheme.typography.bodyLarge)
-                            }
-                            Button(
-                                onClick = {
-                                    showDeletePopup = false
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Gray,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Text("NO", style = MaterialTheme.typography.bodyLarge)
-                            }
+                            Text("YES", style = MaterialTheme.typography.bodyLarge)
+                        }
+                        Button(
+                            onClick = {
+                                showDeletePopup = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Gray,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("NO", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             }
-        }
-    }
-
-    if (!visible) {
-        LaunchedEffect(Unit) {
-            kotlinx.coroutines.delay(300)
-            onDismiss()
         }
     }
 }
