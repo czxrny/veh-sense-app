@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.example.vehsense.bluetooth.ELMPoller
 import com.android.example.vehsense.local.ObdFrameDao
+import com.android.example.vehsense.local.ObdFrameEntity
 import com.android.example.vehsense.model.ObdFrame
 import com.android.example.vehsense.model.toEntity
 import com.android.example.vehsense.network.BackendCommunicator
@@ -25,7 +26,7 @@ class RideViewModel(
     private val obdFrameDao: ObdFrameDao,
     private val btSocket: BluetoothSocket
 ): ViewModel() {
-    private val frameBuffer = mutableListOf<ObdFrame>()
+    private val frameBuffer = mutableListOf<ObdFrameEntity>()
 
     private val _obdFrame = MutableStateFlow(ObdFrame())
     val obdFrame: StateFlow<ObdFrame> = _obdFrame.asStateFlow()
@@ -36,12 +37,12 @@ class RideViewModel(
     private val elmPoller: ELMPoller = ELMPoller(
         onFrameUpdate = { it ->
             _obdFrame.value = it
-            frameBuffer.add(it)
+            frameBuffer.add(it.toEntity())
             if (frameBuffer.size >= 20) {
                 val batch = frameBuffer.toList()
                 frameBuffer.clear()
                 viewModelScope.launch(Dispatchers.IO) {
-                    obdFrameDao.insertAll(batch.map { it.toEntity() })
+                    obdFrameDao.insertAll(batch.map { it })
                 }
             }
             Log.d("OBDDATA", it.toString())},
@@ -106,6 +107,7 @@ class RideViewModel(
                 return
             }
 
+            Log.d("UPLOADING DATA", frameList.toString())
             // to do: take the current vehicle data to an easily accessible place..
             val response = communicator.sendRideData(1, frameList, token)
 
