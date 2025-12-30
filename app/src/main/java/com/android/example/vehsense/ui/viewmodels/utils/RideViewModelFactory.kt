@@ -9,6 +9,7 @@ import com.android.example.vehsense.network.SessionManager
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 
 class RideViewModelFactory(
+    private val vehicleId: Int,
     private val sessionManager: SessionManager,
     private val communicator: BackendCommunicator,
     private val obdFrameDao: ObdFrameDao,
@@ -19,6 +20,7 @@ class RideViewModelFactory(
         if (modelClass.isAssignableFrom(RideViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return RideViewModel(
+                vehicleId = vehicleId,
                 sessionManager = sessionManager,
                 communicator = communicator,
                 obdFrameDao = obdFrameDao,

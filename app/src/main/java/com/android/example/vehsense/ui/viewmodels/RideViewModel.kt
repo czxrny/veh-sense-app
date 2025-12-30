@@ -11,7 +11,6 @@ import com.android.example.vehsense.model.ObdFrame
 import com.android.example.vehsense.model.toEntity
 import com.android.example.vehsense.network.BackendCommunicator
 import com.android.example.vehsense.network.SessionManager
-import com.android.example.vehsense.storage.VehicleStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +20,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 class RideViewModel(
+    private val vehicleId: Int,
     private val sessionManager: SessionManager,
     private val communicator: BackendCommunicator,
     private val obdFrameDao: ObdFrameDao,
@@ -93,7 +93,6 @@ class RideViewModel(
                 Log.d("RideViewModel", "pollJob already inactive or null")
             }
             pollJob = null
-            sendDataToBackend()
         }
     }
 
@@ -108,8 +107,7 @@ class RideViewModel(
             }
 
             Log.d("UPLOADING DATA", frameList.toString())
-            // to do: take the current vehicle data to an easily accessible place..
-            val response = communicator.sendRideData(1, frameList, token)
+            val response = communicator.sendRideData(vehicleId, frameList, token)
 
             if (response.isSuccess) {
                 obdFrameDao.deleteAll()

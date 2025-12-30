@@ -303,7 +303,8 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    composable("ride") {
+                    composable("ride/{vehicleId}") { backStackEntry ->
+                        val id = requireNotNull(backStackEntry.arguments?.getString("vehicleId")).toInt()
                         val vm = getMainViewModel()
                         val socket by vm.socket.collectAsState()
 
@@ -314,6 +315,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                             val rideVM: RideViewModel = viewModel(
                                 factory = RideViewModelFactory(
+                                    vehicleId = id,
                                     sessionManager = AppContainer.sessionManager,
                                     communicator = AppContainer.backend,
                                     obdFrameDao = AppContainer.obdFrameDao,
