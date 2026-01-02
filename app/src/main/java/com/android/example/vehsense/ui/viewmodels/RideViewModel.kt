@@ -26,6 +26,9 @@ class RideViewModel(
     private val obdFrameDao: ObdFrameDao,
     private val btSocket: BluetoothSocket
 ): ViewModel() {
+    private val _uploadFailed = MutableStateFlow(false)
+    val uploadFailed = _uploadFailed.asStateFlow()
+
     private val frameBuffer = mutableListOf<ObdFrameEntity>()
 
     private val _obdFrame = MutableStateFlow(ObdFrame())
@@ -93,32 +96,33 @@ class RideViewModel(
                 Log.d("RideViewModel", "pollJob already inactive or null")
             }
             pollJob = null
+            sendDataToBackend()
         }
     }
 
     private suspend fun sendDataToBackend() {
-        try {
-            val frameList = obdFrameDao.getAll()
+        val frameList = obdFrameDao.getAll()
 
-            val token = sessionManager.getToken()
-            if (token == null) {
-                Log.d("RideViewModel", "Could not authorize")
-                return
+        val token = sessionManager.getToken()
+            ?: throw IllegalStateException("No auth token")
+
+        val response = communicator.sendRideData(vehicleId, frameList, token)
+
+        if (response.isSuccess) {
+            obdFrameDao.deleteAll()
+        } else {
+            throw RuntimeException("Upload failed: $response")
+        }
+    }
+
+    suspend fun tryUploadIfNeeded() {
+        if (obdFrameDao.count() > 0) {
+            try {
+                sendDataToBackend()
+            } catch (e: Exception) {
+                _uploadFailed.value = true
+                throw e
             }
-
-            Log.d("UPLOADING DATA", frameList.toString())
-            val response = communicator.sendRideData(vehicleId, frameList, token)
-
-            if (response.isSuccess) {
-                obdFrameDao.deleteAll()
-            } else {
-                Log.d("RideViewModel", "Error while uploading the ride data: $response")
-            }
-
-        } catch (e: Exception) {
-            Log.d("RideViewModel",
-                ("Error while uploading the ride data:" + e.message) ?: "Unknown error"
-            )
         }
     }
 }

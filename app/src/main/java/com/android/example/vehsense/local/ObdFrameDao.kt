@@ -15,6 +15,8 @@ interface ObdFrameDao {
     @Query("SELECT * FROM obd_frames ORDER BY timestamp ASC")
     suspend fun getAll(): List<ObdFrameEntity>
 
+    @Query("SELECT COUNT(*) FROM obd_frames")
+    suspend fun count(): Int
 
     @Query("DELETE FROM obd_frames")
     suspend fun deleteAll()

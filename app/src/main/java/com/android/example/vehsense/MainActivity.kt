@@ -8,6 +8,7 @@ import com.android.example.vehsense.ui.screens.DashboardScreen
 import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.icons.Icons
@@ -323,8 +324,26 @@ class MainActivity : ComponentActivity() {
                                 )
                             )
 
-                            LaunchedEffect(Unit) {
-                                rideVM.pollData()
+                            val uploadFailed by rideVM.uploadFailed.collectAsState()
+
+                            LaunchedEffect(id) {
+                                try {
+                                    rideVM.tryUploadIfNeeded()
+                                    rideVM.pollData()
+                                } catch (e: Exception) {
+                                    // toasts or sum in the future
+                                    Log.d("RideViewModel", "Something went wrong: " + e.message)
+                                }
+                            }
+
+                            LaunchedEffect(uploadFailed) {
+                                if (uploadFailed) {
+                                    rideVM.stopPolling()
+
+                                    navController.navigate("dashboard") {
+                                        popUpTo("ride") { inclusive = true }
+                                    }
+                                }
                             }
 
                             val obdFrame by rideVM.obdFrame.collectAsState()
