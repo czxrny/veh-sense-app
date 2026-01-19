@@ -27,7 +27,7 @@ import okhttp3.internal.notifyAll
 fun DashboardScreen(
     viewModel: MainViewModel,
     tiles: Array<TileData>,
-    onGoToRideScreen: () -> Unit
+    onGoToRideScreen: (vehicleId: Int) -> Unit
 ) {
     val btIsOn by viewModel.btIsOn.collectAsState()
     val socket by viewModel.socket.collectAsState()
@@ -104,7 +104,7 @@ fun DashboardScreen(
         Button(
             onClick = {
                 viewModel.setELMHeartbeat(enabled = false)
-                onGoToRideScreen()
+                onGoToRideScreen(selectedVehicle!!.id)
             },
             enabled = btIsOn && socket != null && socket!!.isConnected && selectedVehicle != null,
             colors = ButtonDefaults.buttonColors(

@@ -177,7 +177,9 @@ class MainActivity : ComponentActivity() {
                         DashboardScreen(
                             viewModel = vm,
                             tilesArray,
-                            onGoToRideScreen = { navController.navigate("ride") },
+                            onGoToRideScreen = { vehicleId ->
+                                navController.navigate("ride/$vehicleId")
+                            }
                         )
                     }
                     composable("btOverview") {
@@ -310,58 +312,60 @@ class MainActivity : ComponentActivity() {
                         val socket by vm.socket.collectAsState()
 
                         if (socket == null) {
-                            navController.navigate("dashboard") {
-                                popUpTo("ride") { inclusive = true }
-                            }
-                        } else {
-                            val rideVM: RideViewModel = viewModel(
-                                factory = RideViewModelFactory(
-                                    vehicleId = id,
-                                    sessionManager = AppContainer.sessionManager,
-                                    communicator = AppContainer.backend,
-                                    obdFrameDao = AppContainer.obdFrameDao,
-                                    btSocket = socket!!
-                                )
-                            )
-
-                            val uploadFailed by rideVM.uploadFailed.collectAsState()
-
-                            LaunchedEffect(id) {
-                                try {
-                                    rideVM.tryUploadIfNeeded()
-                                    rideVM.pollData()
-                                } catch (e: Exception) {
-                                    // toasts or sum in the future
-                                    Log.d("RideViewModel", "Something went wrong: " + e.message)
+                            LaunchedEffect(Unit) {
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                    launchSingleTop = true
                                 }
                             }
-
-                            LaunchedEffect(uploadFailed) {
-                                if (uploadFailed) {
-                                    rideVM.stopPolling()
-
-                                    navController.navigate("dashboard") {
-                                        popUpTo("ride") { inclusive = true }
-                                    }
-                                }
-                            }
-
-                            val obdFrame by rideVM.obdFrame.collectAsState()
-                            val connectionWasInterrupted by rideVM.connectionWasInterrupted.collectAsState()
-
-                            RideScreen(
-                                uiState = RideUiState(
-                                    obdFrame = obdFrame,
-                                    connectionWasInterrupted = connectionWasInterrupted
-                                ),
-                                onStopTheRide = {
-                                    rideVM.stopPolling()
-                                    navController.navigate("dashboard") {
-                                        popUpTo("ride") { inclusive = true }
-                                    }
-                                },
-                            )
+                            return@composable
                         }
+
+                        val rideVM: RideViewModel = viewModel(
+                            factory = RideViewModelFactory(
+                                vehicleId = id,
+                                sessionManager = AppContainer.sessionManager,
+                                communicator = AppContainer.backend,
+                                obdFrameDao = AppContainer.obdFrameDao,
+                                btSocket = socket!!
+                            )
+                        )
+
+                        val uploadFailed by rideVM.uploadFailed.collectAsState()
+
+                        LaunchedEffect(id) {
+                            rideVM.tryUploadIfNeeded()
+                            if (!rideVM.uploadFailed.value) {
+                                rideVM.pollData()
+                            }
+                        }
+
+                        LaunchedEffect(uploadFailed) {
+                            if (uploadFailed) {
+                                rideVM.stopPolling()
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+
+                        val obdFrame by rideVM.obdFrame.collectAsState()
+                        val connectionWasInterrupted by rideVM.connectionWasInterrupted.collectAsState()
+
+                        RideScreen(
+                            uiState = RideUiState(
+                                obdFrame = obdFrame,
+                                connectionWasInterrupted = connectionWasInterrupted
+                            ),
+                            onStopTheRide = {
+                                rideVM.stopPolling()
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
+                        )
                     }
                 }
             }

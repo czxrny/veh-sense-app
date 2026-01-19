@@ -70,7 +70,7 @@ class RideViewModel(
     fun pollData() {
         pollJob?.cancel()
 
-        pollJob = viewModelScope.launch {
+        pollJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 elmPoller.pollDevice()
             } catch (e: IOException) {
@@ -81,26 +81,22 @@ class RideViewModel(
                 _connectionWasInterrupted.value = true
             } finally {
                 Log.d("RideViewModel", "Device polling was stopped.")
-                _connectionWasInterrupted.value = true
             }
         }
     }
 
     fun stopPolling() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (pollJob?.isActive == true) {
                 Log.d("RideViewModel", "Cancelling OBD poll job...")
                 pollJob?.cancel()
-                elmPoller.reset()
-            } else {
-                Log.d("RideViewModel", "pollJob already inactive or null")
             }
             pollJob = null
             sendDataToBackend()
         }
     }
 
-    private suspend fun sendDataToBackend() {
+    private suspend fun sendDataToBackend(): Boolean {
         val frameList = obdFrameDao.getAll()
 
         val token = sessionManager.getToken()
@@ -108,21 +104,19 @@ class RideViewModel(
 
         val response = communicator.sendRideData(vehicleId, frameList, token)
 
-        if (response.isSuccess) {
+        return if (response.isSuccess) {
             obdFrameDao.deleteAll()
+            true
         } else {
-            throw RuntimeException("Upload failed: $response")
+            Log.d("RideViewModel", "Upload failed: $response")
+            _uploadFailed.value = true
+            false
         }
     }
 
     suspend fun tryUploadIfNeeded() {
         if (obdFrameDao.count() > 0) {
-            try {
-                sendDataToBackend()
-            } catch (e: Exception) {
-                _uploadFailed.value = true
-                throw e
-            }
+            sendDataToBackend()
         }
     }
 }

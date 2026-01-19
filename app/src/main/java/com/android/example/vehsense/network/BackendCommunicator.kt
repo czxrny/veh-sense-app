@@ -1,6 +1,7 @@
 package com.android.example.vehsense.network
 
 import android.util.Base64
+import android.util.Log
 import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.local.ObdFrameEntity
 import com.android.example.vehsense.model.AuthResponse
@@ -415,11 +416,22 @@ class BackendCommunicator {
                     .build()
 
                 client.newCall(request).execute().use { response ->
+
+                    val bodyString = response.body?.string() ?: ""
+
+                    Log.d(
+                        "UPLOAD_RESPONSE",
+                        "HTTP ${response.code} ${response.message}, body=${bodyString.take(2000)}"
+                    )
+
                     if (!response.isSuccessful) {
                         return@withContext Result.failure(
-                            Exception("Upload failed: HTTP ${response.code}")
+                            Exception(
+                                "Upload failed: HTTP ${response.code} ${response.message}, body=${bodyString.take(2000)}"
+                            )
                         )
                     }
+
                     Result.success(UploadResponse(success = true))
                 }
             } catch (e: Exception) {
