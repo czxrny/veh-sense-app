@@ -8,5 +8,4 @@ data class UserInfo(
     @SerializedName("organization_id")val organizationId: Int?,
     @SerializedName("total_kilometers")val totalKilometers: Int,
     @SerializedName("number_of_rides")val numberOfRides: Int,
-    val rating: String
 )

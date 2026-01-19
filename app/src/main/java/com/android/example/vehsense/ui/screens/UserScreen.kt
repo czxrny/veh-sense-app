@@ -69,7 +69,6 @@ fun UserScreen(
                 InfoRow("Username", user.userName)
                 InfoRow("Total kilometers", "${user.totalKilometers} km")
                 InfoRow("Number of rides", user.numberOfRides.toString())
-                InfoRow("Rating", user.rating)
 
                 if (!uiState.isPrivate && organization != null) {
                     Spacer(modifier = Modifier.height(24.dp))
