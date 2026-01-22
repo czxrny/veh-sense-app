@@ -37,6 +37,8 @@ class RideViewModel(
     private val _connectionWasInterrupted = MutableStateFlow(false)
     val connectionWasInterrupted = _connectionWasInterrupted.asStateFlow()
 
+    private var uploadAttempted = false
+
     private val elmPoller: ELMPoller = ELMPoller(
         onFrameUpdate = { it ->
             _obdFrame.value = it
@@ -97,20 +99,25 @@ class RideViewModel(
     }
 
     private suspend fun sendDataToBackend(): Boolean {
-        val frameList = obdFrameDao.getAll()
+        if (!uploadAttempted) {
+            uploadAttempted = true
+            val frameList = obdFrameDao.getAll()
 
-        val token = sessionManager.getToken()
-            ?: throw IllegalStateException("No auth token")
+            val token = sessionManager.getToken()
+                ?: throw IllegalStateException("No auth token")
 
-        val response = communicator.sendRideData(vehicleId, frameList, token)
+            val response = communicator.sendRideData(vehicleId, frameList, token)
 
-        return if (response.isSuccess) {
-            obdFrameDao.deleteAll()
-            true
+            return if (response.isSuccess) {
+                obdFrameDao.deleteAll()
+                true
+            } else {
+                Log.d("RideViewModel", "Upload failed: $response")
+                _uploadFailed.value = true
+                false
+            }
         } else {
-            Log.d("RideViewModel", "Upload failed: $response")
-            _uploadFailed.value = true
-            false
+            return false
         }
     }
 
