@@ -1,7 +1,16 @@
 package com.android.example.vehsense.ui.screens
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,16 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleStartEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
 import com.android.example.vehsense.ui.components.DashboardTile
 import com.android.example.vehsense.ui.components.TileData
 import com.android.example.vehsense.ui.viewmodels.MainViewModel
-import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
-import kotlinx.coroutines.awaitCancellation
-import okhttp3.internal.notifyAll
 
 @Composable
 fun DashboardScreen(
@@ -103,7 +105,7 @@ fun DashboardScreen(
 
         Button(
             onClick = {
-                viewModel.setELMHeartbeat(enabled = false)
+                viewModel.setELMHeartbeat(enable = false)
                 onGoToRideScreen(selectedVehicle!!.id)
             },
             enabled = btIsOn && socket != null && socket!!.isConnected && selectedVehicle != null,

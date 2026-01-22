@@ -1,23 +1,29 @@
 package com.android.example.vehsense.ui.screens
 
-import android.provider.Settings
 import android.content.Intent
+import android.provider.Settings
 import android.util.Log
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.example.vehsense.model.DeviceInfo
+import com.android.example.vehsense.ui.components.StandardScreen
 import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
-import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
 
 @Composable
 fun DeviceDiscoveryScreen(
@@ -26,7 +32,6 @@ fun DeviceDiscoveryScreen(
     onSelectedDevice: (DeviceInfo) -> Unit,
 ) {
     val devices by deviceDiscoveryViewModel.devices.collectAsState()
-    var message by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     LaunchedEffect(btIsOn) {
@@ -36,43 +41,46 @@ fun DeviceDiscoveryScreen(
         onDispose { deviceDiscoveryViewModel.stopDiscovery() }
     }
 
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize()
+    StandardScreen(
+        topText = "Device Discovery"
     ) {
-        if (!btIsOn) {
-            Button(onClick = {
-                context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
-            }) { Text("Enable Bluetooth") }
-        } else {
-            Text("Available Devices:")
-            if (devices.isNotEmpty()) {
-                LazyColumn {
-                    items(devices) { device ->
-                        val name = try {
-                            device.name ?: "Unknown device"
-                        } catch (e: SecurityException) {
-                            Log.d("SecurityEx", "as")
-                            return@items
-                        }
-                        Button(onClick = {
-                            deviceDiscoveryViewModel.stopDiscovery()
-                            onSelectedDevice(DeviceInfo(device.name, device.address))
-                        },
-                            ) {
-                            Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                                Text(text = name)
-                                Text(text = device.address, fontSize = 10.sp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            if (!btIsOn) {
+                Button(onClick = {
+                    context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                }) { Text("Enable Bluetooth") }
+            } else {
+                Text("Available Devices:")
+                Spacer(modifier = Modifier.height(8.dp))
+                if (devices.isNotEmpty()) {
+                    LazyColumn {
+                        items(devices) { device ->
+                            val name = try {
+                                device.name ?: "Unknown device"
+                            } catch (e: SecurityException) {
+                                Log.d("SecurityEx", "as")
+                                return@items
                             }
+                            Button(onClick = {
+                                deviceDiscoveryViewModel.stopDiscovery()
+                                onSelectedDevice(DeviceInfo(device.name, device.address))
+                            },
+                            ) {
+                                Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                                    Text(text = name)
+                                    Text(text = device.address, fontSize = 10.sp)
+                                }
+                            }
+                            Spacer(Modifier.height(2.dp))
                         }
-                        Spacer(Modifier.height(2.dp))
                     }
+                } else {
+
                 }
             }
         }
-    }
-    if (message.isNotEmpty()) {
-        Text("Status: $message")
     }
 }

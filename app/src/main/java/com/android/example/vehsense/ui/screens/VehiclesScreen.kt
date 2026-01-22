@@ -22,10 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.android.example.vehsense.model.Vehicle
 import androidx.compose.ui.unit.sp
+import com.android.example.vehsense.model.Vehicle
 import com.android.example.vehsense.ui.components.CircularProgressionScreen
 import com.android.example.vehsense.ui.components.FadePopup
+import com.android.example.vehsense.ui.components.StandardScreen
 import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 
 data class VehiclesUiState(
@@ -46,54 +47,61 @@ fun VehiclesScreen(
 
     LaunchedEffect(Unit) { onRefresh() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    StandardScreen(
+        topText = "Available Vehicles"
     ) {
-        Text("My Vehicles", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        when(uiState.vehiclesState) {
-            is VehicleViewModel.VehiclesState.Loading -> CircularProgressionScreen()
-            is VehicleViewModel.VehiclesState.Error -> {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = uiState.vehiclesState.message,
-                    color = Color.Red,
-                )
-            }
-            is VehicleViewModel.VehiclesState.Success -> {
-                uiState.vehiclesState.vehicles.forEach { vehicle ->
-                    Text("${vehicle.brand} ${vehicle.model}")
-                    Button(
-                        onClick = {
-                            selectedVehicle = vehicle
-                        }
-                    ) {
-                        Text("See details", style = MaterialTheme.typography.bodyLarge)
-                    }
-                    Button(
-                        onClick = {
-                            onSaveVehicle(vehicle)
-                        }
-                    ) {
-                        Text("Set as current vehicle", style = MaterialTheme.typography.bodyLarge)
-                    }
-                    if(uiState.isPrivate) {
+            when (uiState.vehiclesState) {
+                is VehicleViewModel.VehiclesState.Loading -> CircularProgressionScreen()
+                is VehicleViewModel.VehiclesState.Error -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = uiState.vehiclesState.message,
+                        color = Color.Red,
+                    )
+                }
+
+                is VehicleViewModel.VehiclesState.Success -> {
+                    uiState.vehiclesState.vehicles.forEach { vehicle ->
+                        Text("${vehicle.brand} ${vehicle.model}")
                         Button(
                             onClick = {
-                                onGoToAddScreen()
+                                selectedVehicle = vehicle
                             }
                         ) {
-                            Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
+                            Text("See details", style = MaterialTheme.typography.bodyLarge)
+                        }
+                        Button(
+                            onClick = {
+                                onSaveVehicle(vehicle)
+                            }
+                        ) {
+                            Text(
+                                "Set as current vehicle",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     }
                 }
             }
+            if (uiState.isPrivate) {
+                Button(
+                    onClick = {
+                        onGoToAddScreen()
+                    }
+                ) {
+                    Text("Add new vehicle", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
         }
-    }
 
+
+    }
     selectedVehicle?.let {
         ShowVehicleDetails(
             isPrivate = uiState.isPrivate,

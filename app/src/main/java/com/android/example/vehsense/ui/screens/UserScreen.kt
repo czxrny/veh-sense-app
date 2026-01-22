@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.android.example.vehsense.ui.components.CircularProgressionScreen
 import com.android.example.vehsense.ui.components.FadePopup
+import com.android.example.vehsense.ui.components.StandardScreen
 import com.android.example.vehsense.ui.viewmodels.UserViewModel
 
 data class UserUiState(
@@ -38,68 +39,68 @@ fun UserScreen(
 ) {
     var showLogoutPopup by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    StandardScreen(
+        topText = "Driver's Hub"
     ) {
-        Text("My info", style = MaterialTheme.typography.titleLarge)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            when (val state = uiState.userInfo) {
+                is UserViewModel.UserState.Loading -> {
+                    CircularProgressionScreen()
+                }
 
-        when (val state = uiState.userInfo) {
-            is UserViewModel.UserState.Loading -> {
-                CircularProgressionScreen()
-            }
+                is UserViewModel.UserState.Error -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Error: ${state.message}",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
 
-            is UserViewModel.UserState.Error -> {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Error: ${state.message}",
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+                is UserViewModel.UserState.Success -> {
+                    val user = state.user
+                    val organization = state.organization
 
-            is UserViewModel.UserState.Success -> {
-                val user = state.user
-                val organization = state.organization
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("User Information", style = MaterialTheme.typography.titleMedium)
-
-                InfoRow("Username", user.userName)
-                InfoRow("Total kilometers", "${user.totalKilometers} km")
-                InfoRow("Number of rides", user.numberOfRides.toString())
-
-                if (!uiState.isPrivate && organization != null) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("Organization Information", style = MaterialTheme.typography.titleMedium)
-
-                    InfoRow("Name", organization.name)
-                    InfoRow("Address", organization.address)
-                    InfoRow("City", organization.city)
-                    InfoRow("Country", organization.country)
-                    InfoRow("Zip Code", organization.zipCode)
-                    InfoRow("Country Code", organization.countryCode)
-                    InfoRow("Contact", organization.contactNumber)
-                    InfoRow("Email", organization.email)
-                } else if (!uiState.isPrivate && organization == null) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Fetching organization info...", style = MaterialTheme.typography.bodyLarge)
+                    Text("User Information", style = MaterialTheme.typography.titleMedium)
+
+                    InfoRow("Username", user.userName)
+                    InfoRow("Total kilometers", "${user.totalKilometers} km")
+                    InfoRow("Number of rides", user.numberOfRides.toString())
+
+                    if (!uiState.isPrivate && organization != null) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text("Organization Information", style = MaterialTheme.typography.titleMedium)
+
+                        InfoRow("Name", organization.name)
+                        InfoRow("Address", organization.address)
+                        InfoRow("City", organization.city)
+                        InfoRow("Country", organization.country)
+                        InfoRow("Zip Code", organization.zipCode)
+                        InfoRow("Country Code", organization.countryCode)
+                        InfoRow("Contact", organization.contactNumber)
+                        InfoRow("Email", organization.email)
+                    } else if (!uiState.isPrivate && organization == null) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Fetching organization info...", style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             }
-        }
-        Button(
-            onClick = { showLogoutPopup = true }
-        ) {
-            Text("Logout", style = MaterialTheme.typography.bodyLarge)
-        }
-        Button(
-            onClick = { onGoBack() }
-        ) {
-            Text("Go back", style = MaterialTheme.typography.bodyLarge)
+            Button(
+                onClick = { showLogoutPopup = true }
+            ) {
+                Text("Logout", style = MaterialTheme.typography.bodyLarge)
+            }
+            Button(
+                onClick = { onGoBack() }
+            ) {
+                Text("Go back", style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
-
     FadePopup(
         isActive = showLogoutPopup,
         onBack = {
