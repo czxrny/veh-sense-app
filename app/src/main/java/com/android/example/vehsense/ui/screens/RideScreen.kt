@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,8 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.android.example.vehsense.model.ObdFrame
+import com.android.example.vehsense.ui.components.Gauge
 
 data class RideUiState(
     val obdFrame: ObdFrame,
@@ -38,6 +41,9 @@ fun RideScreen(
     uiState: RideUiState,
     onStopTheRide: () -> Unit,
 ) {
+    val rpmMaxValue = 7000f
+    val maxSpeed = 140f
+
     var showExitPopup by remember { mutableStateOf(false) }
 
     if(uiState.connectionWasInterrupted) {
@@ -50,11 +56,29 @@ fun RideScreen(
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("This is the ride screen", style = MaterialTheme.typography.titleLarge)
+        Text("Registering ride parameters...", style = MaterialTheme.typography.titleLarge, fontSize = 24.sp)
+        Text("Please focus on the road.", fontSize = 16.sp)
 
-        Text("RPM:${uiState.obdFrame.rpm}")
-        Text("Engine Load:${uiState.obdFrame.engineLoad}")
-        Text("Speed:${uiState.obdFrame.vehicleSpeed}")
+        Gauge(
+            modifier = Modifier.fillMaxWidth(),
+            currentValue = uiState.obdFrame.vehicleSpeed.toFloat(),
+            maxValue = maxSpeed,
+            label = "Speed"
+        )
+
+        Gauge(
+            modifier = Modifier.fillMaxWidth(),
+            currentValue = uiState.obdFrame.rpm.toFloat(),
+            maxValue = rpmMaxValue,
+            label = "RPMs"
+        )
+
+        Gauge(
+            modifier = Modifier.fillMaxWidth(),
+            currentValue = uiState.obdFrame.engineLoad.toFloat(),
+            maxValue = 100f,
+            label = "Engine Load"
+        )
 
         Button(
             onClick = {
