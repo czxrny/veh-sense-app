@@ -53,23 +53,30 @@ fun RideScreen(
     ) {
         Text("Registering ride parameters...", style = MaterialTheme.typography.titleLarge, fontSize = 24.sp)
         Text("Please focus on the road.", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(32.dp))
 
         Gauge(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp),
             currentValue = uiState.obdFrame.vehicleSpeed.toFloat(),
             maxValue = maxSpeed,
             label = "Speed"
         )
 
         Gauge(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp),
             currentValue = uiState.obdFrame.rpm.toFloat(),
             maxValue = rpmMaxValue,
             label = "RPMs"
         )
 
         Gauge(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp),
             currentValue = uiState.obdFrame.engineLoad.toFloat(),
             maxValue = 100f,
             label = "Engine Load"
