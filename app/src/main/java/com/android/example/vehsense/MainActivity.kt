@@ -3,12 +3,7 @@ package com.android.example.vehsense
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import com.android.example.vehsense.ui.screens.SplashScreen
-import com.android.example.vehsense.ui.screens.DashboardScreen
-import com.android.example.vehsense.ui.screens.LoginScreen
-import com.android.example.vehsense.ui.screens.SignUpScreen
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.icons.Icons
@@ -28,11 +23,16 @@ import androidx.navigation.compose.rememberNavController
 import com.android.example.vehsense.core.AppContainer
 import com.android.example.vehsense.storage.BluetoothStorage
 import com.android.example.vehsense.ui.components.TileData
+import com.android.example.vehsense.ui.screens.DashboardScreen
 import com.android.example.vehsense.ui.screens.DeviceDiscoveryScreen
 import com.android.example.vehsense.ui.screens.DeviceOverviewScreen
+import com.android.example.vehsense.ui.screens.LoginScreen
 import com.android.example.vehsense.ui.screens.ReportsScreen
+import com.android.example.vehsense.ui.screens.ReportsUiState
 import com.android.example.vehsense.ui.screens.RideScreen
 import com.android.example.vehsense.ui.screens.RideUiState
+import com.android.example.vehsense.ui.screens.SignUpScreen
+import com.android.example.vehsense.ui.screens.SplashScreen
 import com.android.example.vehsense.ui.screens.UserScreen
 import com.android.example.vehsense.ui.screens.UserUiState
 import com.android.example.vehsense.ui.screens.VehicleAddScreen
@@ -42,6 +42,7 @@ import com.android.example.vehsense.ui.screens.VehiclesUiState
 import com.android.example.vehsense.ui.theme.VehSenseTheme
 import com.android.example.vehsense.ui.viewmodels.AuthViewModel
 import com.android.example.vehsense.ui.viewmodels.DeviceDiscoveryViewModel
+import com.android.example.vehsense.ui.viewmodels.ReportViewModel
 import com.android.example.vehsense.ui.viewmodels.RideViewModel
 import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.UserViewModel
@@ -209,7 +210,14 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("reports") {
-                        ReportsScreen()
+                        val vm: ReportViewModel = viewModel(
+                            factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
+                        )
+                        val reportInfo by vm.reportsInfo.collectAsState()
+
+                        ReportsScreen(
+                            uiState = ReportsUiState(reportsState = reportInfo),
+                        )
                     }
                     composable("vehicles") {
                         val mainVM = getMainViewModel()

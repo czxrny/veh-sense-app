@@ -5,8 +5,8 @@ import android.util.Log
 import com.android.example.vehsense.BuildConfig
 import com.android.example.vehsense.local.ObdFrameEntity
 import com.android.example.vehsense.model.AuthResponse
-import com.android.example.vehsense.model.ObdFrame
 import com.android.example.vehsense.model.OrganizationInfo
+import com.android.example.vehsense.model.Report
 import com.android.example.vehsense.model.UploadRideRequest
 import com.android.example.vehsense.model.UserInfo
 import com.android.example.vehsense.model.Vehicle
@@ -17,9 +17,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
@@ -433,6 +433,48 @@ class BackendCommunicator {
                     }
 
                     Result.success(UploadResponse(success = true))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getReports(token: String): Result<List<Report>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${baseUrl}/reports")
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        val errorBody = response.body?.string()
+
+                        Log.e(
+                            "VEHSENSE_API",
+                            "Error ${response.code} | ${response.message} | body=$errorBody"
+                        )
+
+                        return@withContext Result.failure(
+                            Exception("Report Get error: ${response.code} | $errorBody")
+                        )
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed: List<Report> = try {
+                        val listType =
+                            object : com.google.gson.reflect.TypeToken<List<Report>>() {}.type
+                        Gson().fromJson(bodyString, listType)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+
                 }
             } catch (e: Exception) {
                 Result.failure(e)

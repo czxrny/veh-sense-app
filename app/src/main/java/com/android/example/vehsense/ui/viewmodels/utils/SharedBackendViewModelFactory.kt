@@ -3,7 +3,7 @@ package com.android.example.vehsense.ui.viewmodels.utils
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.example.vehsense.network.SessionManager
-import com.android.example.vehsense.ui.screens.SplashScreen
+import com.android.example.vehsense.ui.viewmodels.ReportViewModel
 import com.android.example.vehsense.ui.viewmodels.SplashViewModel
 import com.android.example.vehsense.ui.viewmodels.UserViewModel
 import com.android.example.vehsense.ui.viewmodels.VehicleAddViewModel
@@ -30,6 +30,9 @@ class SharedBackendViewModelFactory(
 
             modelClass.isAssignableFrom(UserViewModel::class.java) ->
                 UserViewModel(sessionManager) as T
+
+            modelClass.isAssignableFrom(ReportViewModel::class.java) ->
+                ReportViewModel(sessionManager) as T
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
         }
