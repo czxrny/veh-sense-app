@@ -7,6 +7,7 @@ import com.android.example.vehsense.local.ObdFrameEntity
 import com.android.example.vehsense.model.AuthResponse
 import com.android.example.vehsense.model.OrganizationInfo
 import com.android.example.vehsense.model.Report
+import com.android.example.vehsense.model.RideRecord
 import com.android.example.vehsense.model.UploadRideRequest
 import com.android.example.vehsense.model.UserInfo
 import com.android.example.vehsense.model.Vehicle
@@ -468,6 +469,39 @@ class BackendCommunicator {
                     val parsed: List<Report> = try {
                         val listType =
                             object : com.google.gson.reflect.TypeToken<List<Report>>() {}.type
+                        Gson().fromJson(bodyString, listType)
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
+                    }
+
+                    Result.success(parsed)
+
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    suspend fun getReportDataById(token: String, id: Int): Result<RideRecord> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url("${baseUrl}/reports/${id}/data")
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("Ride record Get error: ${response.code}"))
+                    }
+
+                    val bodyString = response.body?.string()
+                        ?: return@withContext Result.failure(Exception("Empty response body"))
+
+                    val parsed: RideRecord = try {
+                        val listType =
+                            object : com.google.gson.reflect.TypeToken<RideRecord>() {}.type
                         Gson().fromJson(bodyString, listType)
                     } catch (e: Exception) {
                         return@withContext Result.failure(Exception("Failed to parse response: ${e.message}"))
