@@ -7,8 +7,8 @@ data class Report(
     @SerializedName("user_id") val userId: Int,
     @SerializedName("organization_id") val organizationId: Int,
     @SerializedName("vehicle_id") val vehicleId: Int,
-    @SerializedName("start_time") val startTime: String, // to do long
-    @SerializedName("stop_time") val stopTime: String,
+    @SerializedName("start_time") val startTime: Long,
+    @SerializedName("stop_time") val stopTime: Long,
     @SerializedName("acceleration_style") val accelerationStyle: String,
     @SerializedName("braking_style") val brakingStyle: String,
     @SerializedName("average_speed") val averageSpeed: Float,
