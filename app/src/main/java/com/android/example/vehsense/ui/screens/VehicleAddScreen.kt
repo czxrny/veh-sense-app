@@ -79,7 +79,7 @@ fun VehicleAddScreen(
             OutlinedTextField(
                 value = engineCapacity,
                 onValueChange = { engineCapacity = it },
-                label = { Text("Engine capacity (e.g. 1600)") },
+                label = { Text("Engine capacity (e.g. 1600cc)") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,

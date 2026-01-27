@@ -67,10 +67,10 @@ fun DashboardScreen(
 
         vehicleMessage = when(selectedVehicle) {
             null -> "No vehicle selected. Select the vehicle in vehicle tab."
-            else -> "Vehicle: ${selectedVehicle!!.brand} ${selectedVehicle!!.model}"
+            else -> "Selected vehicle: ${selectedVehicle!!.brand} ${selectedVehicle!!.model}"
         }
 
-        val btStatusText = if (btIsOn) "Ready" else "Not ready"
+        val btStatusText = if (btIsOn) "Active" else "Inactive"
         Text("Bluetooth: $btStatusText")
         Text(elmMessage)
         Text(vehicleMessage)
