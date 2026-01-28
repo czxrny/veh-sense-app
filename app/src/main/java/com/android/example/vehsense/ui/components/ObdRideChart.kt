@@ -28,61 +28,71 @@ fun RideCharts(
     maxSpeed: Float = 200f // km/h
 ) {
     val chartHeight = 100.dp
-    val leftMargin = 80f  // miejsce na ticki
-    val tickCount = 5     // liczba ticków na osi Y
+    val leftMargin = 80f
+    val tickCount = 5
+    val rectWidth = 6f
+
+    val rectAlpha = 0.05f
 
     val minTime = obdFrames.minOfOrNull { it.timestamp } ?: 0L
     val maxTime = obdFrames.maxOfOrNull { it.timestamp } ?: 1L
     val timeRange = (maxTime - minTime).coerceAtLeast(1L)
 
+    val accelerationEvents = rideEvents.filter { it.type == "acceleration" }
+    val brakingEvents = rideEvents.filter { it.type == "braking" }
+    val overspeedEvents = rideEvents.filter { it.type == "overspeed" }
+
+    val highRpmFrames = obdFrames.filter { it.rpm > 3000 }
+    val highLoadFrames = obdFrames.filter { it.engineLoad > 80 }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Speed Chart (km/h)", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(4.dp))
         Spacer(modifier = Modifier.height(10.dp))
-        Canvas(modifier = Modifier
-            .fillMaxWidth()
-            .height(chartHeight)
-        ) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
             val widthF = size.width
             val heightF = size.height
 
             for (i in 0..tickCount) {
                 val y = heightF - i / tickCount.toFloat() * heightF
                 val value = (i / tickCount.toFloat() * maxSpeed).toInt()
-                // linia siatki
-                drawLine(
-                    color = Color.LightGray,
-                    start = Offset(leftMargin, y),
-                    end = Offset(widthF, y),
-                    strokeWidth = 1f
-                )
-                // tekst ticka
-                drawContext.canvas.nativeCanvas.apply {
-                    drawText(
-                        "$value",
-                        0f,
-                        y + 6f,
-                        android.graphics.Paint().apply {
-                            color = android.graphics.Color.BLACK
-                            textSize = 28f
-                        }
-                    )
-                }
+                drawLine(Color.LightGray, Offset(leftMargin, y), Offset(widthF, y), 1f)
+                drawContext.canvas.nativeCanvas.drawText("$value", 0f, y + 6f, android.graphics.Paint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 28f
+                })
             }
 
-            // rysowanie linii danych przesuniętej o leftMargin
+            val eventColorMap = mapOf(
+                "acceleration" to Color.Green.copy(rectAlpha),
+                "braking" to Color.Red.copy(rectAlpha),
+                "overspeed" to Color.Yellow.copy(rectAlpha)
+            )
+            accelerationEvents.forEach { e ->
+                val x = leftMargin + ((e.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
+                drawRect(eventColorMap["acceleration"]!!, Offset(x, 0f), size.copy(width = rectWidth, height = heightF))
+            }
+            brakingEvents.forEach { e ->
+                val x = leftMargin + ((e.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
+                drawRect(eventColorMap["braking"]!!, Offset(x, 0f), size.copy(width = rectWidth, height = heightF))
+            }
+            overspeedEvents.forEach { e ->
+                val x = leftMargin + ((e.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
+                drawRect(eventColorMap["overspeed"]!!, Offset(x, 0f), size.copy(width = rectWidth, height = heightF))
+            }
+
             val path = Path()
             obdFrames.forEachIndexed { index, frame ->
                 val x = leftMargin + ((frame.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
                 val y = heightF - (frame.vehicleSpeed / maxSpeed * heightF) - 1
                 if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, color = Color.Blue, style = Stroke(width = 2f))
+            drawPath(path, color = Color.Blue, style = Stroke(2f))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // ===== RPM CHART =====
-        Text("Engine RPM Chart", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(4.dp))
+        Text("RPM Chart", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(4.dp))
         Spacer(modifier = Modifier.height(10.dp))
         Canvas(modifier = Modifier
             .fillMaxWidth()
@@ -94,23 +104,11 @@ fun RideCharts(
             for (i in 0..tickCount) {
                 val y = heightF - i / tickCount.toFloat() * heightF
                 val value = (i / tickCount.toFloat() * maxRpm).toInt()
-                drawLine(
-                    color = Color.LightGray,
-                    start = Offset(leftMargin, y),
-                    end = Offset(widthF, y),
-                    strokeWidth = 1f
-                )
-                drawContext.canvas.nativeCanvas.apply {
-                    drawText(
-                        "$value",
-                        0f,
-                        y + 6f,
-                        android.graphics.Paint().apply {
-                            color = android.graphics.Color.BLACK
-                            textSize = 28f
-                        }
-                    )
-                }
+                drawLine(Color.LightGray, Offset(leftMargin, y), Offset(widthF, y), 1f)
+                drawContext.canvas.nativeCanvas.drawText("$value", 0f, y + 6f, android.graphics.Paint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 28f
+                })
             }
 
             val path = Path()
@@ -119,12 +117,16 @@ fun RideCharts(
                 val y = heightF - (frame.rpm / maxRpm * heightF) - 1
                 if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, color = Color.Cyan, style = Stroke(width = 2f))
+            drawPath(path, color = Color.Cyan, style = Stroke(2f))
+
+            highRpmFrames.forEach { f ->
+                val x = leftMargin + ((f.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
+                drawRect(Color.Magenta.copy(rectAlpha), Offset(x, 0f), size.copy(width = rectWidth, height = heightF))
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // ===== ENGINE LOAD CHART =====
         Text("Engine Load Chart (%)", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(4.dp))
         Spacer(modifier = Modifier.height(10.dp))
         Canvas(modifier = Modifier
@@ -137,23 +139,11 @@ fun RideCharts(
             for (i in 0..tickCount) {
                 val y = heightF - i / tickCount.toFloat() * heightF
                 val value = (i / tickCount.toFloat() * maxEngineLoad).toInt()
-                drawLine(
-                    color = Color.LightGray,
-                    start = Offset(leftMargin, y),
-                    end = Offset(widthF, y),
-                    strokeWidth = 1f
-                )
-                drawContext.canvas.nativeCanvas.apply {
-                    drawText(
-                        "$value",
-                        0f,
-                        y + 6f,
-                        android.graphics.Paint().apply {
-                            color = android.graphics.Color.BLACK
-                            textSize = 28f
-                        }
-                    )
-                }
+                drawLine(Color.LightGray, Offset(leftMargin, y), Offset(widthF, y), 1f)
+                drawContext.canvas.nativeCanvas.drawText("$value", 0f, y + 6f, android.graphics.Paint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 28f
+                })
             }
 
             val path = Path()
@@ -162,7 +152,12 @@ fun RideCharts(
                 val y = heightF - (frame.engineLoad / maxEngineLoad * heightF) - 1
                 if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, color = Color.Magenta, style = Stroke(width = 2f))
+            drawPath(path, color = Color.Magenta, style = Stroke(2f))
+
+            highLoadFrames.forEach { f ->
+                val x = leftMargin + ((f.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
+                drawRect(Color.Red.copy(rectAlpha), Offset(x, 0f), size.copy(width = rectWidth, height = heightF))
+            }
         }
     }
 }
