@@ -1,9 +1,8 @@
 package com.android.example.vehsense.ui.screens
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +26,7 @@ import com.android.example.vehsense.model.Report
 import com.android.example.vehsense.model.ReportDetails
 import com.android.example.vehsense.ui.components.CircularProgressionScreen
 import com.android.example.vehsense.ui.components.FadePopup
+import com.android.example.vehsense.ui.components.ReportSummaryTile
 import com.android.example.vehsense.ui.components.RideCharts
 import com.android.example.vehsense.ui.components.StandardScreen
 import com.android.example.vehsense.ui.viewmodels.ReportViewModel
@@ -49,60 +49,32 @@ fun ReportsScreen(
     StandardScreen(
         topText = "Driver's Reports"
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            when (uiState.reportsState) {
-                is ReportViewModel.ReportState.Loading -> CircularProgressionScreen()
-                is ReportViewModel.ReportState.Error -> {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = uiState.reportsState.message,
-                        color = Color.Red,
-                    )
-                }
+                when (uiState.reportsState) {
+                    is ReportViewModel.ReportState.Loading -> CircularProgressionScreen()
+                    is ReportViewModel.ReportState.Error -> {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = uiState.reportsState.message,
+                            color = Color.Red,
+                        )
+                    }
 
-                is ReportViewModel.ReportState.Success -> {
-                    uiState.reportsState.reports.forEach { report ->
-
-                        val startTimeFormatted = Instant.ofEpochMilli(report.startTime)
-                            .atZone(ZoneId.systemDefault())
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-
-                        val stopTimeFormatted = Instant.ofEpochMilli(report.stopTime)
-                            .atZone(ZoneId.systemDefault())
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-
-                        val durationMillis = report.stopTime - report.startTime
-                        val duration = Duration.ofMillis(durationMillis)
-                        val hours = duration.toHours()
-                        val minutes = (duration.toMinutes() % 60)
-                        val durationText = "${hours}h ${minutes}m"
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .border(1.dp, Color.Gray)
-                                .padding(16.dp)
-                        ) {
-                            Column {
-                                Text("Start Time: $startTimeFormatted")
-                                Text("Stop Time: $stopTimeFormatted")
-                                Text("Duration: $durationText")
-                                Text("Kilometers Travelled: ${report.kilometersTravelled}")
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Button(onClick = {
-                                    onLoadReportDetails(report)
-                                }) {
-                                    Text("See Details")
-                                }
-                            }
+                    is ReportViewModel.ReportState.Success -> {
+                        var index = 1
+                        uiState.reportsState.reports.forEach { report ->
+                            ReportSummaryTile(
+                                report,
+                                index++,
+                                onClick = onLoadReportDetails
+                            )
                         }
                     }
                 }
