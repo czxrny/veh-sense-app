@@ -214,9 +214,19 @@ class MainActivity : ComponentActivity() {
                             factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
                         )
                         val reportInfo by vm.reportsInfo.collectAsState()
+                        val reportDetailsState by vm.reportDetailsState.collectAsState()
 
                         ReportsScreen(
-                            uiState = ReportsUiState(reportsState = reportInfo),
+                            uiState = ReportsUiState(
+                                reportInfo,
+                                reportDetailsState
+                            ),
+                            onLoadReportDetails = { report ->
+                                vm.loadReportDetails(report)
+                            },
+                            onClearReportDetails = {
+                                vm.clearReportDetails()
+                            }
                         )
                     }
                     composable("vehicles") {

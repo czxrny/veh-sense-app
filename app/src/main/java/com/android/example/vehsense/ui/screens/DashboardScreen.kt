@@ -105,7 +105,7 @@ fun DashboardScreen(
 
         Button(
             onClick = {
-                viewModel.setELMHeartbeat(enable = false)
+                viewModel.setELMHeartbeat(enabled = false)
                 onGoToRideScreen(selectedVehicle!!.id)
             },
             enabled = btIsOn && socket != null && socket!!.isConnected && selectedVehicle != null,
