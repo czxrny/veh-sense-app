@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class Report(
     val id: Int,
     @SerializedName("user_id") val userId: Int,
-    @SerializedName("organization_id") val organizationId: Int,
+    @SerializedName("organization_id") val organizationId: Int?,
     @SerializedName("vehicle_id") val vehicleId: Int,
     @SerializedName("start_time") val startTime: Long,
     @SerializedName("stop_time") val stopTime: Long,
