@@ -152,7 +152,7 @@ fun RideCharts(
                 val y = heightF - (frame.engineLoad / maxEngineLoad * heightF) - 1
                 if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, color = Color.Magenta, style = Stroke(2f))
+            drawPath(path, color = Color.Green, style = Stroke(2f))
 
             highLoadFrames.forEach { f ->
                 val x = leftMargin + ((f.timestamp - minTime) / timeRange.toFloat()) * (widthF - leftMargin)
