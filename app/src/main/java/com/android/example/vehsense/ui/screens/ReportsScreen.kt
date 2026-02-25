@@ -55,8 +55,6 @@ fun ReportsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-
                 when (uiState.reportsState) {
                     is ReportViewModel.ReportState.Loading -> CircularProgressionScreen()
                     is ReportViewModel.ReportState.Error -> {
@@ -70,6 +68,7 @@ fun ReportsScreen(
                     is ReportViewModel.ReportState.Success -> {
                         var index = 1
                         uiState.reportsState.reports.forEach { report ->
+                            Spacer(modifier = Modifier.height(16.dp))
                             ReportSummaryTile(
                                 report,
                                 index++,
