@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,6 +53,7 @@ import com.android.example.vehsense.ui.viewmodels.VehicleViewModel
 import com.android.example.vehsense.ui.viewmodels.utils.RideViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.SharedBackendViewModelFactory
 import com.android.example.vehsense.ui.viewmodels.utils.getMainViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -297,6 +299,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     composable("userScreen") {
+                        val coroutineScope = rememberCoroutineScope()
+
                         val userVM = viewModel<UserViewModel>(
                             factory = SharedBackendViewModelFactory(AppContainer.sessionManager)
                         )
@@ -315,10 +319,13 @@ class MainActivity : ComponentActivity() {
                             ),
                             onGoBack = { navController.popBackStack() },
                             onLogout = {
-                                AppContainer.sessionManager.logout()
-                                navController.navigate("login") {
-                                    popUpTo("dashboard") {
-                                        inclusive = true
+                                coroutineScope.launch { // temporary fix. needs refactor
+                                    AppContainer.sessionManager.logout()
+                                    AppContainer.obdFrameDao.deleteAll()
+                                    navController.navigate("login") {
+                                        popUpTo("dashboard") {
+                                            inclusive = true
+                                        }
                                     }
                                 }
                             }
